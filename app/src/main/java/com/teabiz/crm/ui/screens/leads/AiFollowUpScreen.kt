@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.AiFollowUpViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AiFollowUpScreen(
     leadId: String,
@@ -91,8 +93,9 @@ fun AiFollowUpScreen(
                         listOf("Professional", "Friendly", "Urgent").forEach { tone ->
                             FilterChip(
                                 selected = selectedTone == tone,
-                                onClick = { viewModel.updateTone(tone) }
-                            ) { Text(tone) }
+                                onClick = { viewModel.updateTone(tone) },
+                                label = { Text(tone) }
+                            )
                         }
                     }
 
@@ -101,8 +104,9 @@ fun AiFollowUpScreen(
                         listOf("English", "Hindi", "Marathi").forEach { lang ->
                             FilterChip(
                                 selected = selectedLanguage == lang,
-                                onClick = { viewModel.updateLanguage(lang) }
-                            ) { Text(lang) }
+                                onClick = { viewModel.updateLanguage(lang) },
+                                label = { Text(lang) }
+                            )
                         }
                     }
 

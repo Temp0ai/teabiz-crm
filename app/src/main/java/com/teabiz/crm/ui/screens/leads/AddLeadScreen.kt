@@ -145,10 +145,9 @@ fun AddLeadScreen(
                         ClientType.entries.take(4).forEach { type ->
                             FilterChip(
                                 selected = clientType == type.displayName,
-                                onClick = { clientType = type.displayName }
-                            ) {
-                                Text(type.displayName, style = MaterialTheme.typography.labelSmall)
-                            }
+                                onClick = { clientType = type.displayName },
+                                label = { Text(type.displayName, style = MaterialTheme.typography.labelSmall) }
+                            )
                         }
                     }
 

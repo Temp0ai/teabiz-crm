@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -18,6 +20,7 @@ import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.LeadsViewModel
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeadDetailScreen(
     leadId: String,
@@ -27,6 +30,7 @@ fun LeadDetailScreen(
 ) {
     var lead by remember { mutableStateOf<Lead?>(null) }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     LaunchedEffect(leadId) {
         leadsViewModel.getLeadById(leadId) { fetched ->
@@ -191,7 +195,7 @@ fun LeadDetailScreen(
                                 val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
                                     data = android.net.Uri.parse("https://wa.me/${phone.replace(Regex("[^0-9]"), "")}")
                                 }
-                                androidx.compose.ui.platform.LocalContext.current.startActivity(intent)
+                                context.startActivity(intent)
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -207,7 +211,7 @@ fun LeadDetailScreen(
                                 val intent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
                                     data = android.net.Uri.parse("tel:${l.phone}")
                                 }
-                                androidx.compose.ui.platform.LocalContext.current.startActivity(intent)
+                                context.startActivity(intent)
                             }
                         },
                         modifier = Modifier.weight(1f)
