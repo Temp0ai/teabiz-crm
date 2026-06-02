@@ -27,6 +27,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector,
     object ContentCalendar : Screen("content_calendar", "Content Calendar", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth)
     object GmbManagement : Screen("gmb_management", "Google My Business", Icons.Outlined.Business, Icons.Filled.Business)
     object WhatsAppCatalog : Screen("whatsapp_catalog", "Catalog", Icons.Outlined.Store, Icons.Filled.Store)
+    object HashtagGenerator : Screen("hashtag_generator", "Hashtags", Icons.Outlined.Tag, Icons.Filled.Tag)
 }
 
 data class BottomNavItem(

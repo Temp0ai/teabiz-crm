@@ -23,7 +23,8 @@ fun MarketingScreen(
     onNavigateToSeo: () -> Unit,
     onNavigateToCompetitors: () -> Unit,
     onNavigateToContent: () -> Unit,
-    onNavigateToGmb: () -> Unit
+    onNavigateToGmb: () -> Unit,
+    onNavigateToHashtags: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -74,6 +75,14 @@ fun MarketingScreen(
             icon = Icons.Default.Business,
             color = StatusNew,
             onClick = onNavigateToGmb
+        )
+
+        MarketingCard(
+            title = "Instagram & Facebook Hashtags",
+            description = "Upload tea premix photos/videos and generate optimized hashtags for maximum reach.",
+            icon = Icons.Default.Tag,
+            color = Color(0xFFE1306C),
+            onClick = onNavigateToHashtags
         )
 
         Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {

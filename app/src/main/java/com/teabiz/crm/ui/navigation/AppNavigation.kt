@@ -63,7 +63,8 @@ fun AppNavigation(
         route.startsWith("seo_tools") ||
         route.startsWith("competitor") ||
         route.startsWith("content_calendar") ||
-        route.startsWith("gmb")
+        route.startsWith("gmb") ||
+        route.startsWith("hashtag_generator")
     } ?: false
 
     Scaffold(
@@ -147,12 +148,21 @@ fun AppNavigation(
                     onNavigateToSeo = { navController.navigate(Screen.SeoTools.route) },
                     onNavigateToCompetitors = { navController.navigate(Screen.CompetitorAnalysis.route) },
                     onNavigateToContent = { navController.navigate(Screen.ContentCalendar.route) },
-                    onNavigateToGmb = { navController.navigate(Screen.GmbManagement.route) }
+                    onNavigateToGmb = { navController.navigate(Screen.GmbManagement.route) },
+                    onNavigateToHashtags = { navController.navigate(Screen.HashtagGenerator.route) }
                 )
             }
 
             composable(Screen.Settings.route) {
                 SettingsScreen(viewModel = settingsViewModel)
+            }
+
+            composable(Screen.HashtagGenerator.route) {
+                val hashtagViewModel: HashtagViewModel = hiltViewModel()
+                com.teabiz.crm.ui.screens.marketing.HashtagGeneratorScreen(
+                    viewModel = hashtagViewModel,
+                    onBack = { navController.popBackStack() }
+                )
             }
 
             composable(
