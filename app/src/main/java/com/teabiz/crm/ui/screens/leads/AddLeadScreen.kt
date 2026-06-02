@@ -18,6 +18,7 @@ import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.LeadsViewModel
 import java.util.UUID
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddLeadScreen(
     viewModel: LeadsViewModel,
