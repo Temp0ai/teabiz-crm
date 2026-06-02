@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import com.teabiz.crm.data.model.WhatsAppCatalogItem
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.WhatsAppCatalogViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WhatsAppCatalogScreen(
     viewModel: WhatsAppCatalogViewModel,
@@ -116,6 +118,7 @@ fun WhatsAppCatalogScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogItemCard(item: WhatsAppCatalogItem) {
     val context = LocalContext.current

@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -19,6 +20,7 @@ import com.teabiz.crm.data.model.GmbPost
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.MarketingViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GmbScreen(
     viewModel: MarketingViewModel,
@@ -151,7 +153,7 @@ fun GmbScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(post.topicType.ifBlank { "Update" }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                            ContentStatusChip(post.status)
+                            GmbContentStatusChip(post.status)
                         }
                         Text(post.summary, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
@@ -177,6 +179,7 @@ fun GmbScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateGmbPostDialog(
     onDismiss: () -> Unit,
@@ -200,7 +203,7 @@ fun CreateGmbPostDialog(
                 Text("Topic Type", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Update", "Offer", "Event", "Product").forEach { type ->
-                        FilterChip(selected = topicType == type, onClick = { topicType = type }) { Text(type) }
+                        FilterChip(selected = topicType == type, onClick = { topicType = type }, label = { Text(type) })
                     }
                 }
             }
@@ -214,8 +217,9 @@ fun CreateGmbPostDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ContentStatusChip(status: String) {
+fun GmbContentStatusChip(status: String) {
     val color = when (status) {
         "POSTED" -> StatusConverted
         "DRAFT" -> Color.Gray

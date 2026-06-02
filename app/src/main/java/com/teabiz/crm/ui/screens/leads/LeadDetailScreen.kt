@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.teabiz.crm.data.model.Lead
 import com.teabiz.crm.ui.theme.*
@@ -285,8 +286,7 @@ fun StatusButton(
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = if (isSelected) color.copy(alpha = 0.2f) else Color.Transparent,
             contentColor = color
-        ),
-        modifier = Modifier.weight(1f)
+        )
     ) {
         Text(status, style = MaterialTheme.typography.labelSmall)
     }

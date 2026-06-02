@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import com.teabiz.crm.data.model.ContentCalendar
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.MarketingViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentCalendarScreen(
     viewModel: MarketingViewModel,
@@ -139,18 +141,20 @@ fun ContentCalendarScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlatformIcon(platform: String) {
     val (icon, color) = when (platform.lowercase()) {
-        "instagram" -> Icons.Default.Instagram to Color(0xFFE4405F)
+        "instagram" -> Icons.Default.Share to Color(0xFFE4405F)
         "facebook" -> Icons.Default.Facebook to Color(0xFF1877F2)
-        "linkedin" -> Icons.Default.LinkedIn to Color(0xFF0A66C2)
-        "twitter" -> Icons.Default.Twitter to Color(0xFF1DA1F2)
+        "linkedin" -> Icons.Default.Public to Color(0xFF0A66C2)
+        "twitter" -> Icons.Default.Chat to Color(0xFF1DA1F2)
         else -> Icons.Default.Public to Color.Gray
     }
     Icon(icon, contentDescription = platform, tint = color, modifier = Modifier.size(24.dp))
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentStatusChip(status: String) {
     val color = when (status) {
@@ -165,6 +169,7 @@ fun ContentStatusChip(status: String) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateContentDialog(
     onDismiss: () -> Unit,
@@ -182,7 +187,7 @@ fun CreateContentDialog(
                 Text("Platform", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("Instagram", "Facebook", "LinkedIn", "Twitter").forEach { p ->
-                        FilterChip(selected = platform == p, onClick = { platform = p }) { Text(p) }
+                        FilterChip(selected = platform == p, onClick = { platform = p }, label = { Text(p) })
                     }
                 }
                 OutlinedTextField(

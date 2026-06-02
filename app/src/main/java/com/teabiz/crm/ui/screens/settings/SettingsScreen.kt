@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.SettingsViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val apiKey by viewModel.apiKey.collectAsState()
@@ -117,8 +119,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     listOf("Professional", "Friendly", "Urgent").forEach { tone ->
                         FilterChip(
                             selected = editMessageTone == tone,
-                            onClick = { editMessageTone = tone }
-                        ) { Text(tone) }
+                            onClick = { editMessageTone = tone },
+                            label = { Text(tone) }
+                        )
                     }
                 }
             }

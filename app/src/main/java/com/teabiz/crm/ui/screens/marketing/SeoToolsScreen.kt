@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import com.teabiz.crm.data.model.SeoKeyword
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.MarketingViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeoToolsScreen(
     viewModel: MarketingViewModel,
