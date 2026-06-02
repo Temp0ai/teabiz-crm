@@ -27,16 +27,14 @@ class ImportViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val importSessions: StateFlow<List<ImportSession>> = _importSessions
 
-    val gmailAuthState: StateFlow<GmailAuthState> = gmailService.authState
-
     fun importLeads(leads: List<Lead>) {
         viewModelScope.launch {
             _importState.value = ImportState.Processing
             try {
                 val result = leadRepository.importLeads(leads)
                 val session = ImportSession(
-                    fileName = "Excel Import",
-                    fileType = "EXCEL",
+                    fileName = "Manual Import",
+                    fileType = "MANUAL",
                     totalRows = leads.size,
                     importedRows = result.imported,
                     duplicateRows = result.duplicates,
@@ -49,103 +47,6 @@ class ImportViewModel @Inject constructor(
                 _importState.value = ImportState.Error(e.message ?: "Import failed")
             }
         }
-    }
-
-    fun fetchGmailLeads(authCode: String) {
-        viewModelScope.launch {
-            _importState.value = ImportState.Processing
-            try {
-                gmailService.authenticate(getApplication(), authCode)
-                val emails = gmailService.fetchEmails()
-                val leads = emails.mapNotNull { email -> emailToLead(email) }
-                val result = leadRepository.importLeads(leads)
-
-                val session = ImportSession(
-                    fileName = "Gmail Import",
-                    fileType = "GMAIL",
-                    totalRows = emails.size,
-                    importedRows = result.imported,
-                    duplicateRows = result.duplicates,
-                    failedRows = result.failed,
-                    status = "COMPLETED"
-                )
-                leadRepository.insertImportSession(session)
-                _importState.value = ImportState.Completed(result)
-            } catch (e: Exception) {
-                _importState.value = ImportState.Error(e.message ?: "Gmail import failed")
-            }
-        }
-    }
-
-    fun searchGmailLeads(query: String) {
-        viewModelScope.launch {
-            _importState.value = ImportState.Processing
-            try {
-                val emails = gmailService.searchEmails(query)
-                val leads = emails.mapNotNull { email -> emailToLead(email) }
-                val result = leadRepository.importLeads(leads)
-
-                val session = ImportSession(
-                    fileName = "Gmail Search: $query",
-                    fileType = "GMAIL",
-                    totalRows = emails.size,
-                    importedRows = result.imported,
-                    duplicateRows = result.duplicates,
-                    failedRows = result.failed,
-                    status = "COMPLETED"
-                )
-                leadRepository.insertImportSession(session)
-                _importState.value = ImportState.Completed(result)
-            } catch (e: Exception) {
-                _importState.value = ImportState.Error(e.message ?: "Gmail search failed")
-            }
-        }
-    }
-
-    private fun emailToLead(email: EmailMessage): Lead? {
-        val name = email.fromName.ifBlank { email.from.substringBefore("@") }
-        if (name.isBlank() && email.from.isBlank()) return null
-
-        val phone = extractPhone(email.body)
-        val products = extractProducts(email.subject + " " + email.body)
-
-        return Lead(
-            name = name,
-            email = email.from,
-            phone = phone,
-            productInterest = products,
-            message = email.subject + "\n\n" + email.snippet,
-            source = "GMAIL",
-            status = "NEW"
-        )
-    }
-
-    private fun extractPhone(text: String): String {
-        val phoneRegex = Regex("(?:\\+91|0)?[6-9]\\d{9}")
-        return phoneRegex.find(text)?.value ?: ""
-    }
-
-    private fun extractProducts(text: String): List<String> {
-        val products = mutableListOf<String>()
-        val lowerText = text.lowercase()
-
-        val productKeywords = mapOf(
-            "Tea Premix" to listOf("tea premix", "chai premix", "tea powder premix"),
-            "Coffee Premix" to listOf("coffee premix", "instant coffee premix"),
-            "Nescafe Premix" to listOf("nescafe premix", "nescafe"),
-            "Tea Machine" to listOf("tea machine", "chai machine", "tea maker"),
-            "Coffee Machine" to listOf("coffee machine", "coffee maker", "espresso machine"),
-            "Nescafe Machine" to listOf("nescafe machine", "nescafe maker")
-        )
-
-        productKeywords.forEach { (category, keywords) ->
-            if (keywords.any { lowerText.contains(it) }) {
-                products.add(category)
-            }
-        }
-
-        if (products.isEmpty()) products.add("Other")
-        return products
     }
 
     fun resetState() {
