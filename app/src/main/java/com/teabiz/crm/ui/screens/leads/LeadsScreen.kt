@@ -4,7 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -44,7 +44,7 @@ fun LeadsScreen(
             )
             FloatingActionButton(
                 onClick = onAddLead,
-                backgroundColor = TeaGreen
+                containerColor = TeaGreen
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Add Lead")
             }
@@ -164,7 +164,7 @@ fun LeadItem(lead: Lead, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        elevation = 2.dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier

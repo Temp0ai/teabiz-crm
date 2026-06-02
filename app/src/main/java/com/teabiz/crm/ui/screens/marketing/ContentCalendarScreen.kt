@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.marketing
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -33,12 +33,14 @@ fun ContentCalendarScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = PremixGold,
-                contentColor = Color.DarkGray
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = PremixGold,
+                    titleContentColor = Color.DarkGray
+                )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showCreateDialog = true }, backgroundColor = PremixGold) {
+            FloatingActionButton(onClick = { showCreateDialog = true }, containerColor = PremixGold) {
                 Icon(Icons.Default.Add, contentDescription = "Create Content", tint = Color.DarkGray)
             }
         }
@@ -64,7 +66,7 @@ fun ContentCalendarScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(content) { item ->
-                    Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)

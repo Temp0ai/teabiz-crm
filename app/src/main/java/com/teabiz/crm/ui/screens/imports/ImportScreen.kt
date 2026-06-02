@@ -7,7 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -30,7 +30,6 @@ fun ImportScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val scaffoldState = rememberScaffoldState()
 
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
     var parseResult by remember { mutableStateOf<ExcelParser.ParseResult?>(null) }
@@ -54,12 +53,13 @@ fun ImportScreen(
     }
 
     Scaffold(
-        scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text("Import Leads") },
-                backgroundColor = TeaGreen,
-                contentColor = Color.White,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TeaGreen,
+                    titleContentColor = Color.White
+                ),
                 actions = {
                     IconButton(onClick = onNavigateToHistory) {
                         Icon(Icons.Default.History, contentDescription = "Import History")
@@ -78,7 +78,7 @@ fun ImportScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = 4.dp
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -108,7 +108,7 @@ fun ImportScreen(
                                     filePickerLauncher.launch(intent)
                                 },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(backgroundColor = CoffeeBrown)
+                                colors = ButtonDefaults.buttonColors(containerColor = CoffeeBrown)
                             ) {
                                 Icon(Icons.Default.FileUpload, contentDescription = null)
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -118,7 +118,7 @@ fun ImportScreen(
                             Button(
                                 onClick = onNavigateToGmail,
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(backgroundColor = StatusNew)
+                                colors = ButtonDefaults.buttonColors(containerColor = StatusNew)
                             ) {
                                 Icon(Icons.Default.Email, contentDescription = null)
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -150,7 +150,7 @@ fun ImportScreen(
 
             parseResult?.let { result ->
                 item {
-                    Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -172,8 +172,8 @@ fun ImportScreen(
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            elevation = 4.dp,
-                            backgroundColor = StatusLost.copy(alpha = 0.1f)
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                            colors = CardDefaults.cardColors(containerColor = StatusLost.copy(alpha = 0.1f))
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text("Validation Errors", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = StatusLost)
@@ -193,7 +193,7 @@ fun ImportScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = result.leads.isNotEmpty() && !isImporting,
-                        colors = ButtonDefaults.buttonColors(backgroundColor = TeaGreen)
+                        colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
                     ) {
                         Icon(Icons.Default.FileDownload, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -206,7 +206,7 @@ fun ImportScreen(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        backgroundColor = StatusConverted.copy(alpha = 0.1f)
+                        colors = CardDefaults.cardColors(containerColor = StatusConverted.copy(alpha = 0.1f))
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
@@ -221,7 +221,7 @@ fun ImportScreen(
             }
 
             item {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)

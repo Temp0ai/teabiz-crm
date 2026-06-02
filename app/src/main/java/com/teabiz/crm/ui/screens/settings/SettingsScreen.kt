@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.settings
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -44,7 +44,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             fontWeight = FontWeight.Bold
         )
 
-        Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -61,7 +61,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -94,7 +94,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -124,7 +124,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             }
         }
 
-        Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+        Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
             Column(
                 modifier = Modifier.padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -148,7 +148,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 )
             },
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(backgroundColor = TeaGreen)
+            colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
         ) {
             Icon(Icons.Default.Save, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))

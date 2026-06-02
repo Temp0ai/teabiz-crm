@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.leads
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -41,8 +41,10 @@ fun AddLeadScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = TeaGreen,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TeaGreen,
+                    titleContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -54,7 +56,7 @@ fun AddLeadScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -99,7 +101,7 @@ fun AddLeadScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -128,7 +130,7 @@ fun AddLeadScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -181,7 +183,7 @@ fun AddLeadScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = name.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(backgroundColor = TeaGreen)
+                colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
             ) {
                 Icon(Icons.Default.Save, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))

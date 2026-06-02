@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.marketing
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -35,12 +35,14 @@ fun CompetitorScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = CoffeeBrown,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = CoffeeBrown,
+                    titleContentColor = Color.White
+                )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showAddDialog = true }, backgroundColor = CoffeeBrown) {
+            FloatingActionButton(onClick = { showAddDialog = true }, containerColor = CoffeeBrown) {
                 Icon(Icons.Default.Add, contentDescription = "Add Competitor")
             }
         }
@@ -69,7 +71,7 @@ fun CompetitorScreen(
             }
 
             items(competitors) { competitor ->
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)

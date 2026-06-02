@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.campaigns
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -38,7 +38,7 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
             )
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
-                backgroundColor = TeaGreen
+                containerColor = TeaGreen
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Create Campaign")
             }
@@ -97,7 +97,7 @@ fun CampaignItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = 4.dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
@@ -126,7 +126,7 @@ fun CampaignItem(
                 color = Color.Gray
             )
 
-            Divider()
+            HorizontalDivider()
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -147,7 +147,7 @@ fun CampaignItem(
                     Button(
                         onClick = onSend,
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(backgroundColor = TeaGreen)
+                        colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
                     ) {
                         Icon(Icons.Default.Send, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))

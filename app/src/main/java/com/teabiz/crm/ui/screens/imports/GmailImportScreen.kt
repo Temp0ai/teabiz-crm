@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.imports
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -36,8 +36,10 @@ fun GmailImportScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = StatusNew,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = StatusNew,
+                    titleContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -48,7 +50,7 @@ fun GmailImportScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -102,7 +104,7 @@ fun GmailImportScreen(
                                 context.startActivity(intent)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = StatusNew)
+                            colors = ButtonDefaults.buttonColors(containerColor = StatusNew)
                         ) {
                             Icon(Icons.Default.Email, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -118,7 +120,7 @@ fun GmailImportScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -141,7 +143,7 @@ fun GmailImportScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = searchQuery.isNotBlank() && !isSearching && gmailAuthState.isAuthenticated,
-                        colors = ButtonDefaults.buttonColors(backgroundColor = StatusNew)
+                        colors = ButtonDefaults.buttonColors(containerColor = StatusNew)
                     ) {
                         if (isSearching) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
@@ -156,7 +158,7 @@ fun GmailImportScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)

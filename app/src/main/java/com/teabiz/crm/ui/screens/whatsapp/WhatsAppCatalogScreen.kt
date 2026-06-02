@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -42,8 +42,10 @@ fun WhatsAppCatalogScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = Color(0xFF25D366),
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color(0xFF25D366),
+                    titleContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -55,7 +57,7 @@ fun WhatsAppCatalogScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -118,7 +120,7 @@ fun WhatsAppCatalogScreen(
 fun CatalogItemCard(item: WhatsAppCatalogItem) {
     val context = LocalContext.current
 
-    Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
+    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -165,7 +167,7 @@ fun CatalogItemCard(item: WhatsAppCatalogItem) {
                     context.startActivity(intent)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF25D366))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
             ) {
                 Icon(Icons.Default.Share, contentDescription = null)
                 Spacer(modifier = Modifier.width(4.dp))

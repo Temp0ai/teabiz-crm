@@ -124,7 +124,7 @@ class SEOService @Inject constructor(
         )
     }
 
-    suspend fun analyzeWebsite(url: String): Map<String, Any> {
+    suspend fun analyzeWebsite(url: String): Map<String, Any?> {
         return withContext(Dispatchers.IO) {
             try {
                 val request = Request.Builder()

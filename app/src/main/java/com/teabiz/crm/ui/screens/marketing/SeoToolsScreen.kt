@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.marketing
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -35,8 +35,10 @@ fun SeoToolsScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = TeaGreen,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TeaGreen,
+                    titleContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -48,7 +50,7 @@ fun SeoToolsScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -72,7 +74,7 @@ fun SeoToolsScreen(
                             },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = searchKeyword.isNotBlank() && !isResearching,
-                            colors = ButtonDefaults.buttonColors(backgroundColor = TeaGreen)
+                            colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
                         ) {
                             if (isResearching) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
@@ -94,7 +96,7 @@ fun SeoToolsScreen(
                 }
 
                 items(researchResults) { result ->
-                    Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
+                    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
                         Column(
                             modifier = Modifier.padding(16.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -147,7 +149,7 @@ fun SeoToolsScreen(
                 }
 
                 items(keywords) { keyword ->
-                    Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
+                    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
                         Row(
                             modifier = Modifier.padding(12.dp).fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically

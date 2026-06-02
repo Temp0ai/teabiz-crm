@@ -3,7 +3,8 @@ package com.teabiz.crm.ui.screens.dashboard
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -119,13 +120,13 @@ fun DashboardScreen(
         }
 
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = 4.dp
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Quick Actions",
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "Quick Actions",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -137,7 +138,7 @@ fun DashboardScreen(
                         Button(
                             onClick = onNavigateToImport,
                             modifier = Modifier.weight(1f),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = CoffeeBrown)
+                            colors = ButtonDefaults.buttonColors(containerColor = CoffeeBrown)
                         ) {
                             Icon(Icons.Default.FileUpload, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
@@ -200,11 +201,11 @@ fun StatCard(
     icon: ImageVector,
     color: Color
 ) {
-    Card(
-        modifier = modifier,
-        elevation = 4.dp,
-        backgroundColor = color.copy(alpha = 0.1f)
-    ) {
+            Card(
+                modifier = modifier,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f))
+            ) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -237,7 +238,7 @@ fun RecentLeadItem(lead: Lead) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
-        elevation = 2.dp
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier

@@ -5,7 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -38,12 +38,14 @@ fun GmbScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = StatusNew,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = StatusNew,
+                    titleContentColor = Color.White
+                )
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = { showCreatePostDialog = true }, backgroundColor = StatusNew) {
+            FloatingActionButton(onClick = { showCreatePostDialog = true }, containerColor = StatusNew) {
                 Icon(Icons.Default.Add, contentDescription = "Create Post")
             }
         }
@@ -56,7 +58,7 @@ fun GmbScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -72,7 +74,7 @@ fun GmbScreen(
                                 context.startActivity(intent)
                             },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(backgroundColor = StatusNew)
+                            colors = ButtonDefaults.buttonColors(containerColor = StatusNew)
                         ) {
                             Icon(Icons.Default.Business, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
@@ -83,7 +85,7 @@ fun GmbScreen(
             }
 
             item {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -138,7 +140,7 @@ fun GmbScreen(
             }
 
             items(posts) { post ->
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 2.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)

@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -48,8 +48,10 @@ fun AiFollowUpScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = CoffeeBrown,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = CoffeeBrown,
+                    titleContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -62,7 +64,7 @@ fun AiFollowUpScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             currentLead?.let { lead ->
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -77,7 +79,7 @@ fun AiFollowUpScreen(
                 }
             }
 
-            Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -135,7 +137,7 @@ fun AiFollowUpScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isGenerating && currentLead != null,
-                colors = ButtonDefaults.buttonColors(backgroundColor = CoffeeBrown)
+                colors = ButtonDefaults.buttonColors(containerColor = CoffeeBrown)
             ) {
                 if (isGenerating) {
                     CircularProgressIndicator(
@@ -152,7 +154,7 @@ fun AiFollowUpScreen(
             }
 
             if (generatedMessage.isNotBlank()) {
-                Card(modifier = Modifier.fillMaxWidth(), elevation = 4.dp) {
+                Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -185,7 +187,7 @@ fun AiFollowUpScreen(
                                     }
                                 },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF25D366))
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                             ) {
                                 Icon(Icons.Default.Send, contentDescription = null)
                                 Spacer(modifier = Modifier.width(4.dp))

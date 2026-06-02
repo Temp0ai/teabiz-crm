@@ -1,7 +1,7 @@
 package com.teabiz.crm.ui.navigation
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -51,9 +51,9 @@ fun AppNavigation(
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                BottomNavigation {
+                NavigationBar {
                     bottomNavItems.forEach { item ->
-                        BottomNavigationItem(
+                        NavigationBarItem(
                             icon = { Icon(item.screen.icon, contentDescription = item.label) },
                             label = { Text(item.label) },
                             selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true,

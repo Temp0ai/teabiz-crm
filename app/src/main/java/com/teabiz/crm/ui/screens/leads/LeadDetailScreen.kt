@@ -3,7 +3,7 @@ package com.teabiz.crm.ui.screens.leads
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.*
+import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
@@ -26,7 +26,6 @@ fun LeadDetailScreen(
 ) {
     var lead by remember { mutableStateOf<Lead?>(null) }
     val scope = rememberCoroutineScope()
-    val scaffoldState = rememberScaffoldState()
 
     LaunchedEffect(leadId) {
         leadsViewModel.getLeadById(leadId) { fetched ->
@@ -35,7 +34,6 @@ fun LeadDetailScreen(
     }
 
     Scaffold(
-        scaffoldState = scaffoldState,
         topBar = {
             TopAppBar(
                 title = { Text("Lead Detail") },
@@ -44,8 +42,10 @@ fun LeadDetailScreen(
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
-                backgroundColor = TeaGreen,
-                contentColor = Color.White
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = TeaGreen,
+                    titleContentColor = Color.White
+                )
             )
         }
     ) { padding ->
@@ -60,7 +60,7 @@ fun LeadDetailScreen(
             ) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = 4.dp
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -90,7 +90,7 @@ fun LeadDetailScreen(
                             }
                         }
 
-                        Divider()
+                        HorizontalDivider()
 
                         DetailRow(icon = Icons.Default.Email, label = "Email", value = leadData.email)
                         DetailRow(icon = Icons.Default.Phone, label = "Phone", value = leadData.phone)
@@ -139,7 +139,7 @@ fun LeadDetailScreen(
 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    elevation = 4.dp
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(16.dp),
@@ -194,7 +194,7 @@ fun LeadDetailScreen(
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF25D366))
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                     ) {
                         Icon(Icons.Default.Chat, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
@@ -220,7 +220,7 @@ fun LeadDetailScreen(
                 Button(
                     onClick = { onNavigateToAiFollowUp(leadId) },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = CoffeeBrown)
+                    colors = ButtonDefaults.buttonColors(containerColor = CoffeeBrown)
                 ) {
                     Icon(Icons.Default.AutoAwesome, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
@@ -283,7 +283,7 @@ fun StatusButton(
     OutlinedButton(
         onClick = { onStatusSelected(status) },
         colors = ButtonDefaults.outlinedButtonColors(
-            backgroundColor = if (isSelected) color.copy(alpha = 0.2f) else Color.Transparent,
+            containerColor = if (isSelected) color.copy(alpha = 0.2f) else Color.Transparent,
             contentColor = color
         ),
         modifier = Modifier.weight(1f)
