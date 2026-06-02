@@ -249,7 +249,7 @@ fun LeadItem(lead: Lead, onClick: () -> Unit, onWhatsApp: () -> Unit = {}, onCal
                     }
                 }
             }
-            Column(horizontalAlignment = Alignment.CenterVertically, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 if (lead.phone.isNotBlank()) {
                     IconButton(onClick = onWhatsApp, modifier = Modifier.size(36.dp)) {
                         Icon(
