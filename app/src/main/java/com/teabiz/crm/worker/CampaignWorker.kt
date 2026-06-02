@@ -5,11 +5,12 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
-import com.teabiz.crm.TeabizApp
+import com.teabiz.crm.TeaBizApp
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.repository.LeadRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.flow.first
 import java.util.concurrent.TimeUnit
 
 @HiltWorker
@@ -26,12 +27,7 @@ class CampaignWorker @AssistedInject constructor(
 
             val campaign = leadRepository.getCampaignById(campaignId) ?: return Result.failure()
 
-            val leads = leadRepository.getWhatsAppOptInLeads().let { flow ->
-                // Collect the first emission
-                var result = emptyList<com.teabiz.crm.data.model.Lead>()
-                flow.take(1).collect { result = it }
-                result
-            }
+            val leads = leadRepository.getWhatsAppOptInLeads().first()
 
             val filteredLeads = if (campaign.targetCategory.isNotBlank()) {
                 leads.filter { lead ->
@@ -97,7 +93,7 @@ class CampaignWorker @AssistedInject constructor(
     }
 
     private fun showNotification(title: String, message: String) {
-        val notification = NotificationCompat.Builder(applicationContext, TeabizApp.CAMPAIGN_CHANNEL_ID)
+        val notification = NotificationCompat.Builder(applicationContext, TeaBizApp.CAMPAIGN_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)

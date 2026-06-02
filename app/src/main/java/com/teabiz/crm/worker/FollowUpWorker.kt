@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
-import com.teabiz.crm.TeabizApp
+import com.teabiz.crm.TeaBizApp
 import com.teabiz.crm.data.model.FollowUp
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.repository.LeadRepository
@@ -67,7 +67,7 @@ class FollowUpWorker @AssistedInject constructor(
     }
 
     private fun showNotification(title: String, message: String) {
-        val notification = NotificationCompat.Builder(applicationContext, TeabizApp.FOLLOWUP_CHANNEL_ID)
+        val notification = NotificationCompat.Builder(applicationContext, TeaBizApp.FOLLOWUP_CHANNEL_ID)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle(title)
             .setContentText(message)

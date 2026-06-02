@@ -1,6 +1,7 @@
 package com.teabiz.crm.ui.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.teabiz.crm.data.model.*
 import com.teabiz.crm.data.remote.AiService
@@ -13,15 +14,17 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ImportViewModel @Inject constructor(
+    application: Application,
     private val leadRepository: LeadRepository,
     private val gmailService: GmailService,
     private val aiService: AiService
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _importState = MutableStateFlow<ImportState>(ImportState.Idle)
     val importState: StateFlow<ImportState> = _importState
 
     private val _importSessions = leadRepository.getAllImportSessions()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val importSessions: StateFlow<List<ImportSession>> = _importSessions
 
     val gmailAuthState: StateFlow<GmailAuthState> = gmailService.authState
@@ -52,7 +55,7 @@ class ImportViewModel @Inject constructor(
         viewModelScope.launch {
             _importState.value = ImportState.Processing
             try {
-                gmailService.authenticate(authCode)
+                gmailService.authenticate(getApplication(), authCode)
                 val emails = gmailService.fetchEmails()
                 val leads = emails.mapNotNull { email -> emailToLead(email) }
                 val result = leadRepository.importLeads(leads)
