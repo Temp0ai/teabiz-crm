@@ -1,0 +1,201 @@
+package com.teabiz.crm.ui.navigation
+
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.teabiz.crm.ui.screens.campaigns.CampaignsScreen
+import com.teabiz.crm.ui.screens.dashboard.DashboardScreen
+import com.teabiz.crm.ui.screens.imports.ImportScreen
+import com.teabiz.crm.ui.screens.leads.AddLeadScreen
+import com.teabiz.crm.ui.screens.leads.LeadDetailScreen
+import com.teabiz.crm.ui.screens.leads.LeadsScreen
+import com.teabiz.crm.ui.screens.marketing.MarketingScreen
+import com.teabiz.crm.ui.screens.marketing.SeoToolsScreen
+import com.teabiz.crm.ui.screens.marketing.CompetitorScreen
+import com.teabiz.crm.ui.screens.marketing.ContentCalendarScreen
+import com.teabiz.crm.ui.screens.marketing.GmbScreen
+import com.teabiz.crm.ui.screens.settings.SettingsScreen
+import com.teabiz.crm.ui.screens.whatsapp.WhatsAppCatalogScreen
+import com.teabiz.crm.ui.viewmodel.*
+
+@Composable
+fun AppNavigation(
+    dashboardViewModel: DashboardViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    leadsViewModel: LeadsViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    importViewModel: ImportViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    campaignsViewModel: CampaignsViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    marketingViewModel: MarketingViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
+    settingsViewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    val showBottomBar = when (currentDestination?.route) {
+        Screen.LeadDetail.route, Screen.AddLead.route,
+        Screen.AiFollowUp.route, Screen.GmailImport.route,
+        Screen.WhatsAppCatalog.route -> false
+        else -> true
+    }
+
+    Scaffold(
+        bottomBar = {
+            if (showBottomBar) {
+                BottomNavigation {
+                    bottomNavItems.forEach { item ->
+                        BottomNavigationItem(
+                            icon = { Icon(item.screen.icon, contentDescription = item.label) },
+                            label = { Text(item.label) },
+                            selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true,
+                            onClick = {
+                                navController.navigate(item.screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Dashboard.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(
+                    viewModel = dashboardViewModel,
+                    onNavigateToLeads = { navController.navigate(Screen.Leads.route) },
+                    onNavigateToImport = { navController.navigate(Screen.Import.route) }
+                )
+            }
+
+            composable(Screen.Leads.route) {
+                LeadsScreen(
+                    viewModel = leadsViewModel,
+                    onLeadClick = { leadId ->
+                        navController.navigate(Screen.LeadDetail.createRoute(leadId))
+                    },
+                    onAddLead = { navController.navigate(Screen.AddLead.route) }
+                )
+            }
+
+            composable(Screen.Import.route) {
+                ImportScreen(
+                    viewModel = importViewModel,
+                    onNavigateToHistory = { navController.navigate(Screen.ImportHistory.route) },
+                    onNavigateToGmail = { navController.navigate(Screen.GmailImport.route) }
+                )
+            }
+
+            composable(Screen.Campaigns.route) {
+                CampaignsScreen(viewModel = campaignsViewModel)
+            }
+
+            composable(Screen.Marketing.route) {
+                MarketingScreen(
+                    viewModel = marketingViewModel,
+                    onNavigateToSeo = { navController.navigate(Screen.SeoTools.route) },
+                    onNavigateToCompetitors = { navController.navigate(Screen.CompetitorAnalysis.route) },
+                    onNavigateToContent = { navController.navigate(Screen.ContentCalendar.route) },
+                    onNavigateToGmb = { navController.navigate(Screen.GmbManagement.route) }
+                )
+            }
+
+            composable(Screen.Settings.route) {
+                SettingsScreen(viewModel = settingsViewModel)
+            }
+
+            composable(
+                route = Screen.LeadDetail.route,
+                arguments = listOf(navArgument("leadId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val leadId = backStackEntry.arguments?.getString("leadId") ?: return@composable
+                LeadDetailScreen(
+                    leadId = leadId,
+                    leadsViewModel = leadsViewModel,
+                    onBack = { navController.popBackStack() },
+                    onNavigateToAiFollowUp = { id ->
+                        navController.navigate(Screen.AiFollowUp.createRoute(id))
+                    }
+                )
+            }
+
+            composable(Screen.AddLead.route) {
+                AddLeadScreen(
+                    viewModel = leadsViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.GmailImport.route) {
+                com.teabiz.crm.ui.screens.imports.GmailImportScreen(
+                    viewModel = importViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(
+                route = Screen.AiFollowUp.route,
+                arguments = listOf(navArgument("leadId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val leadId = backStackEntry.arguments?.getString("leadId") ?: return@composable
+                com.teabiz.crm.ui.screens.leads.AiFollowUpScreen(
+                    leadId = leadId,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.SeoTools.route) {
+                SeoToolsScreen(
+                    viewModel = marketingViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.CompetitorAnalysis.route) {
+                CompetitorScreen(
+                    viewModel = marketingViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.ContentCalendar.route) {
+                ContentCalendarScreen(
+                    viewModel = marketingViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.GmbManagement.route) {
+                GmbScreen(
+                    viewModel = marketingViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.WhatsAppCatalog.route) {
+                val whatsappCatalogViewModel: com.teabiz.crm.ui.viewmodel.WhatsAppCatalogViewModel = androidx.hilt.navigation.compose.hiltViewModel()
+                WhatsAppCatalogScreen(
+                    viewModel = whatsappCatalogViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+        }
+    }
+}

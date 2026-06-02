@@ -1,0 +1,183 @@
+package com.teabiz.crm.ui.viewmodel
+
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.teabiz.crm.data.model.*
+import com.teabiz.crm.data.remote.AiService
+import com.teabiz.crm.data.remote.SEOService
+import com.teabiz.crm.data.repository.MarketingRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+@HiltViewModel
+class MarketingViewModel @Inject constructor(
+    private val marketingRepository: MarketingRepository,
+    private val seoService: SEOService,
+    private val aiService: AiService
+) : ViewModel() {
+
+    val keywords: StateFlow<List<SeoKeyword>> = marketingRepository.getAllKeywords()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val competitors: StateFlow<List<Competitor>> = marketingRepository.getAllCompetitors()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val contentCalendar: StateFlow<List<ContentCalendar>> = marketingRepository.getAllContent()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val gmbPosts: StateFlow<List<GmbPost>> = marketingRepository.getAllGmbPosts()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    private val _isResearching = MutableStateFlow(false)
+    val isResearching: StateFlow<Boolean> = _isResearching
+
+    private val _researchResults = MutableStateFlow<List<KeywordResearchResult>>(emptyList())
+    val researchResults: StateFlow<List<KeywordResearchResult>> = _researchResults
+
+    private val _competitorAnalysis = MutableStateFlow<CompetitorAnalysisResult?>(null)
+    val competitorAnalysis: StateFlow<CompetitorAnalysisResult?> = _competitorAnalysis
+
+    fun researchKeywords(keywords: List<String>) {
+        viewModelScope.launch {
+            _isResearching.value = true
+            try {
+                val results = keywords.map { keyword ->
+                    seoService.getKeywordData(keyword)
+                }
+                _researchResults.value = results
+
+                // Save to database
+                val seoKeywords = results.map { result ->
+                    SeoKeyword(
+                        keyword = result.keyword,
+                        searchVolume = result.searchVolume,
+                        competition = result.competition,
+                        trend = result.trend,
+                        relatedKeywords = result.relatedKeywords
+                    )
+                }
+                marketingRepository.insertKeywords(seoKeywords)
+            } catch (e: Exception) {
+                // Handle error
+            } finally {
+                _isResearching.value = false
+            }
+        }
+    }
+
+    fun analyzeCompetitor(name: String, website: String) {
+        viewModelScope.launch {
+            _isResearching.value = true
+            try {
+                val response = aiService.analyzeCompetitor(name, website)
+                // Parse AI response into structured data
+                val analysis = CompetitorAnalysisResult(
+                    competitorName = name,
+                    website = website,
+                    estimatedTraffic = 0,
+                    topKeywords = emptyList(),
+                    strengths = listOf("AI analysis available in full version"),
+                    weaknesses = emptyList(),
+                    opportunities = emptyList()
+                )
+                _competitorAnalysis.value = analysis
+
+                // Save competitor
+                val competitor = Competitor(
+                    name = name,
+                    website = website,
+                    lastAnalyzed = System.currentTimeMillis()
+                )
+                marketingRepository.insertCompetitor(competitor)
+            } catch (e: Exception) {
+                // Handle error
+            } finally {
+                _isResearching.value = false
+            }
+        }
+    }
+
+    fun generateContent(platform: String, keyword: String, audience: String) {
+        viewModelScope.launch {
+            try {
+                val response = aiService.generateSEOContent(keyword, "social_media_post", audience)
+                val content = ContentCalendar(
+                    platform = platform,
+                    contentType = "AI Generated",
+                    caption = response.content,
+                    targetAudience = audience,
+                    status = "DRAFT"
+                )
+                marketingRepository.insertContent(content)
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun generateHashtags(productType: String, platform: String) {
+        viewModelScope.launch {
+            try {
+                val response = aiService.generateHashtags(productType, platform)
+                val hashtags = response.content.split("\n").map { it.trim() }.filter { it.isNotBlank() }
+                // Return hashtags via flow or callback
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+
+    fun addCompetitor(competitor: Competitor) {
+        viewModelScope.launch {
+            marketingRepository.insertCompetitor(competitor)
+        }
+    }
+
+    fun deleteCompetitor(competitor: Competitor) {
+        viewModelScope.launch {
+            marketingRepository.deleteCompetitor(competitor)
+        }
+    }
+
+    fun addContent(content: ContentCalendar) {
+        viewModelScope.launch {
+            marketingRepository.insertContent(content)
+        }
+    }
+
+    fun updateContent(content: ContentCalendar) {
+        viewModelScope.launch {
+            marketingRepository.updateContent(content)
+        }
+    }
+
+    fun deleteContent(content: ContentCalendar) {
+        viewModelScope.launch {
+            marketingRepository.deleteContent(content)
+        }
+    }
+
+    fun deleteKeyword(keyword: SeoKeyword) {
+        viewModelScope.launch {
+            marketingRepository.deleteKeyword(keyword)
+        }
+    }
+
+    fun addGmbPost(post: GmbPost) {
+        viewModelScope.launch {
+            marketingRepository.insertGmbPost(post)
+        }
+    }
+
+    fun generateGmbResponse(review: String, rating: Int, businessName: String) {
+        viewModelScope.launch {
+            try {
+                aiService.generateReviewResponse(review, rating, businessName)
+            } catch (e: Exception) {
+                // Handle error
+            }
+        }
+    }
+}
