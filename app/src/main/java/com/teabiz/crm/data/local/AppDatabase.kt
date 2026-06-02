@@ -12,7 +12,6 @@ import com.teabiz.crm.data.model.*
         Lead::class,
         FollowUp::class,
         ImportSession::class,
-        ImportError::class,
         Campaign::class,
         SeoKeyword::class,
         Competitor::class,

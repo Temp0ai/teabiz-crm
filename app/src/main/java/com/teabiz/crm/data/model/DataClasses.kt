@@ -51,25 +51,6 @@ data class CompetitorAnalysisResult(
     val analyzedAt: Long = System.currentTimeMillis()
 )
 
-data class SocialMediaPost(
-    val platform: String,
-    val contentType: String,
-    val caption: String,
-    val hashtags: List<String>,
-    val mediaPrompt: String? = null,
-    val targetAudience: String,
-    val scheduledAt: Long? = null
-)
-
-data class GMBReview(
-    val reviewId: String,
-    val reviewerName: String,
-    val rating: Int,
-    val comment: String,
-    val timestamp: Long,
-    val reply: String? = null
-)
-
 data class ImportResult(
     val imported: Int,
     val duplicates: Int,

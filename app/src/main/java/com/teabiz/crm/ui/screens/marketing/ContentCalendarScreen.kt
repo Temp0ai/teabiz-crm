@@ -146,7 +146,7 @@ fun ContentCalendarScreen(
 fun PlatformIcon(platform: String) {
     val (icon, color) = when (platform.lowercase()) {
         "instagram" -> Icons.Default.Share to Color(0xFFE4405F)
-        "facebook" -> Icons.Default.Facebook to Color(0xFF1877F2)
+        "facebook" -> Icons.Default.Public to Color(0xFF1877F2)
         "linkedin" -> Icons.Default.Public to Color(0xFF0A66C2)
         "twitter" -> Icons.Default.Chat to Color(0xFF1DA1F2)
         else -> Icons.Default.Public to Color.Gray
