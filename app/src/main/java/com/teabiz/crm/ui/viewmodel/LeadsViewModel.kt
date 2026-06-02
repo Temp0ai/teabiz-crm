@@ -34,9 +34,15 @@ class LeadsViewModel @Inject constructor(
     }.flatMapLatest { (query, filter, category) ->
         when {
             query.isNotBlank() -> leadRepository.searchLeads(query)
-            category.isNotBlank() -> leadRepository.getLeadsByCategory(category)
-            filter != "ALL" -> leadRepository.getLeadsByStatus(filter)
             else -> leadRepository.getAllLeads()
+        }
+    }.map { leads ->
+        val filter = _selectedFilter.value
+        val category = _selectedCategory.value
+        leads.filter { lead ->
+            val matchesStatus = filter == "ALL" || lead.status == filter
+            val matchesCategory = category.isBlank() || lead.productInterest.any { it.contains(category, ignoreCase = true) }
+            matchesStatus && matchesCategory
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 

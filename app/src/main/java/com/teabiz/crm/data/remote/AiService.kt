@@ -274,19 +274,47 @@ class AiService @Inject constructor(
     }
 
     private fun generateFallbackMessage(prompt: String): String {
+        val isHindi = prompt.contains("Language: Hindi", ignoreCase = true)
+        val isMarathi = prompt.contains("Language: Marathi", ignoreCase = true)
+        val lang = when {
+            isHindi -> "hi"
+            isMarathi -> "mr"
+            else -> "en"
+        }
+
+        val productHint = Regex("who (?:inquired about|showed interest in|recent purchase of|about our) (.+?)(?:\\.|\\n)").find(prompt)?.groupValues?.get(1) ?: "our products"
+
         return when {
             prompt.contains("follow-up", ignoreCase = true) || prompt.contains("inquiry", ignoreCase = true) ->
-                "Thank you for your interest in our products! We'd love to discuss how our premium tea and coffee solutions can benefit your business. Please let us know a convenient time for a quick call, or feel free to ask any questions. Looking forward to hearing from you!"
+                when (lang) {
+                    "hi" -> "नमस्ते! $productHint में आपकी रुचि के लिए धन्यवाद। हम आपके व्यवसाय के लिए हमारे प्रीमियम उत्पादों के लाभों पर चर्चा करना चाहेंगे। कृपया हमें एक सुविधाजनक समय बताएं, या कोई भी प्रश्न पूछें। आपसे सुनने की प्रतीक्षा रहेगी!"
+                    "mr" -> "नमस्कार! $productHint मध्ये आपल्या आवडीबद्दल धन्यवाद. आमच्या प्रीमियम उत्पादनांचे तुमच्या व्यवसायासाठी काय फायदे आहेत यावर आम्ही चर्चा करू इच्छितो. कृपया आम्हाला एक सुविधाजनक वेळ सांगा, किंवा कोणताही प्रश्न विचारा. तुमच्याकडून ऐकण्याची आतुरता!"
+                    else -> "Thank you for your interest in $productHint! We'd love to discuss how our premium tea and coffee solutions can benefit your business. Please let us know a convenient time for a quick call, or feel free to ask any questions. Looking forward to hearing from you!"
+                }
             prompt.contains("stale", ignoreCase = true) || prompt.contains("re-engage", ignoreCase = true) ->
-                "Hi! We noticed you were interested in our products earlier. We have some exciting new offers and product updates we'd love to share with you. Would you like to schedule a quick chat to explore how we can work together?"
+                when (lang) {
+                    "hi" -> "नमस्ते! हमने देखा कि आप $productHint में रुचि रखते थे। हमारे पास कुछ रोमांचक नए ऑफर और उत्पाद अपडेट हैं जो हम आपके साथ साझा करना चाहेंगे। क्या आप एक त्वरित चैट शेड्यूल करना चाहेंगे?"
+                    "mr" -> "नमस्कार! आम्हाला दिसले की तुम्हाला $productHint मध्ये आस्ती होती. आमच्याकडे काही रोमांचक नवीन ऑफर आणि उत्पादन अपडेट आहेत जे आम्ही तुमच्याशी शेअर करू इच्छितो. तुम्ही एक जलद चैट शेड्यूल करू इच्छाल का?"
+                    else -> "Hi! We noticed you were interested in $productHint earlier. We have some exciting new offers and product updates we'd love to share with you. Would you like to schedule a quick chat to explore how we can work together?"
+                }
             prompt.contains("thank", ignoreCase = true) || prompt.contains("post_purchase", ignoreCase = true) ->
-                "Thank you for choosing us! We hope you're enjoying your purchase. Your feedback means the world to us. If you need anything, don't hesitate to reach out. We also have a referral program - share with friends and earn rewards!"
+                when (lang) {
+                    "hi" -> "धन्यवाद $productHint के लिए चुनने के लिए! हम आशा करते हैं कि आप अपनी खरीदारी का आनंद ले रहे हैं। आपकी प्रतिक्रिया हमारे लिए बहुत मायने रखती है। यदि आपको किसी भी चीज़ की आवश्यकता है, तो बेझिझक हमसे संपर्क करें। हमारे पास एक रेफरल प्रोग्राम भी है!"
+                    "mr" -> "$productHint निवडल्याबद्दल धन्यवाद! आम्हाला आशा आहे की तुम्ही तुमच्या खरेदीचा आनंद घेत आहात. तुमचा अभिप्राय आमच्यासाठी खूप महत्त्वाचा आहे. काहीही हवे असल्यास आमच्याशी संपर्क साधा. आमच्याकडे रेफरल प्रोग्रामही आहे!"
+                    else -> "Thank you for choosing $productHint! We hope you're enjoying your purchase. Your feedback means the world to us. If you need anything, don't hesitate to reach out. We also have a referral program - share with friends and earn rewards!"
+                }
             prompt.contains("promotional", ignoreCase = true) ->
-                "Special offer just for you! Get exclusive deals on our premium tea and coffee products. Limited time offer - contact us today to learn more about our business partnership programs and bulk pricing!"
-            prompt.contains("hashtag", ignoreCase = true) ->
-                "TeaLovers, CoffeeTime, ChaiLovers, PremixLife, TeaBusiness, CoffeeShop, IndianChai, TeaVendor, CoffeeWholesale, MasalaChai, TeaEntrepreneur, CoffeeCulture, ChaiPeCharcha, TeaIndustry, CoffeeBusiness"
+                when (lang) {
+                    "hi" -> "केवल आपके लिए विशेष ऑफर! $productHint पर विशेष छूट प्राप्त करें। सीमित समय का ऑफर - आज ही हमसे संपर्क करें और अपने व्यवसाय के लिए बल्क प्राइसिंग के बारे में जानें!"
+                    "mr" -> "फक्त तुमच्यासाठी विशेष ऑफर! $productHint वर विशेष सवलत मिळवा. मर्यादित काळाचा ऑफर - आजच आमच्याशी संपर्क साधा आणि बल्क प्राइसिंगबद्दल जाणून घ्या!"
+                    else -> "Special offer just for you! Get exclusive deals on $productHint. Limited time offer - contact us today to learn more about our business partnership programs and bulk pricing!"
+                }
             else ->
-                "Thank you for your interest. We'd be happy to help you with our range of tea and coffee products. Please let us know your requirements and we'll get back to you shortly."
+                when (lang) {
+                    "hi" -> "आपकी रुचि के लिए धन्यवाद। हम $productHint की अपनी रेंज के साथ आपकी मदद करने के लिए तैयार हैं। कृपया हमें अपनी आवश्यकताएं बताएं और हम जल्द ही आपसे संपर्क करेंगे।"
+                    "mr" -> "तुमच्या आवडीबद्दल धन्यवाद. आम्ही $productHint च्या आमच्या रेंजसह तुम्हाला मदत करण्यासाठी तयार आहोत. कृपया आम्हाला तुमच्या गरजा सांगा आणि आम्ही लवकरच तुमच्याशी संपर्क साधू."
+                    else -> "Thank you for your interest. We'd be happy to help you with our range of $productHint. Please let us know your requirements and we'll get back to you shortly."
+                }
         }
     }
 }

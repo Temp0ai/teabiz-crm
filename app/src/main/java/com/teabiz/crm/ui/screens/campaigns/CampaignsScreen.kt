@@ -16,6 +16,7 @@ import com.teabiz.crm.data.model.Campaign
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.CampaignsViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CampaignsScreen(viewModel: CampaignsViewModel) {
     var showCreateDialog by remember { mutableStateOf(false) }
