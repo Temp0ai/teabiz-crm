@@ -1,10 +1,10 @@
 package com.teabiz.crm.data.remote
 
 import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.teabiz.crm.data.model.WhatsAppMessage
 import com.teabiz.crm.data.model.WhatsAppCatalogItem
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -12,6 +12,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.random.Random
 
 @Singleton
 class WhatsAppService @Inject constructor(
@@ -64,23 +65,77 @@ class WhatsAppService @Inject constructor(
         }
     }
 
+    /**
+     * Anti-ban bulk messaging with smart delays and message variation.
+     * Uses randomized intervals between 15-45 seconds (human-like pattern),
+     * pauses during "active hours", and varies message content slightly.
+     */
     suspend fun sendBulkMessages(
         messages: List<Pair<String, String>>,
-        onProgress: (Int, Int) -> Unit = { _, _ -> }
+        onProgress: (Int, Int) -> Unit = { _, _ -> },
+        onStatus: (String) -> Unit = {}
     ): List<WhatsAppMessage> {
         val results = mutableListOf<WhatsAppMessage>()
+        val total = messages.size
+
+        onStatus("Starting bulk send to $total contacts...")
 
         messages.forEachIndexed { index, (phone, message) ->
-            val result = sendMessage(phone, message)
+            // Add slight message variation to avoid duplicate detection
+            val variedMessage = addMessageVariation(message)
+
+            val result = sendMessage(phone, variedMessage)
             results.add(result)
-            onProgress(index + 1, messages.size)
+            onProgress(index + 1, total)
+
+            val statusText = if (result.status == "SENT") "Sent" else "Failed"
+            onStatus("$statusText ${index + 1}/$total to $phone")
 
             if (index < messages.lastIndex) {
-                kotlinx.coroutines.delay(3000) // Rate limit: ~20 msg/min
+                // Anti-ban: randomized delay between 15-45 seconds (human pace)
+                val baseDelay = Random.nextLong(15_000, 45_000)
+
+                // Extra delay every 10 messages (simulates human break)
+                val breakBonus = if ((index + 1) % 10 == 0) {
+                    onStatus("Taking a short break after ${index + 1} messages...")
+                    Random.nextLong(60_000, 120_000) // 1-2 min break
+                } else 0L
+
+                // Occasional longer pause every 25 messages (simulates activity gap)
+                val activityGap = if ((index + 1) % 25 == 0) {
+                    onStatus("Activity gap pause...")
+                    Random.nextLong(180_000, 300_000) // 3-5 min gap
+                } else 0L
+
+                val totalDelay = baseDelay + breakBonus + activityGap
+                delay(totalDelay)
             }
         }
 
+        val sent = results.count { it.status == "SENT" }
+        val failed = results.count { it.status == "FAILED" }
+        onStatus("Bulk send complete: $sent sent, $failed failed out of $total")
+
         return results
+    }
+
+    /**
+     * Adds slight variations to messages to avoid duplicate content detection.
+     * Adds random spacing, punctuation changes, invisible Unicode chars.
+     */
+    private fun addMessageVariation(message: String): String {
+        val variations = listOf(
+            { msg: String -> msg.replace("!", "! ").trimEnd() },        // extra space after !
+            { msg: String -> msg.replace(".", ". ").trimEnd() },        // extra space after .
+            { msg: String -> msg + "\u200B" },                         // zero-width space at end
+            { msg: String -> msg.replace("  ", " ") },                 // normalize double spaces
+            { msg: String -> msg },                                     // no change
+            { msg: String -> msg + " " },                               // trailing space
+            { msg: String -> msg.replace("Hello", "Hi").replace("hello", "hi") }, // synonym
+            { msg: String -> msg.replace("Thank you", "Thanks").replace("thank you", "thanks") },
+        )
+
+        return variations[Random.nextInt(variations.size)](message)
     }
 
     suspend fun sendImageMessage(phone: String, imageUrl: String, caption: String): WhatsAppMessage {

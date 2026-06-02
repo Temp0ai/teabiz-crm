@@ -1,5 +1,7 @@
 package com.teabiz.crm.ui.screens.leads
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teabiz.crm.data.model.Lead
@@ -26,6 +29,8 @@ fun LeadsScreen(
     val leads by viewModel.leads.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val selectedFilter by viewModel.selectedFilter.collectAsState()
+    val selectedCategory by viewModel.selectedCategory.collectAsState()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -85,10 +90,10 @@ fun LeadsScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            CategoryChip("Tea Premix", viewModel)
-            CategoryChip("Coffee Premix", viewModel)
-            CategoryChip("Tea Machine", viewModel)
-            CategoryChip("Coffee Machine", viewModel)
+            CategoryChip("Tea Premix", selectedCategory, viewModel)
+            CategoryChip("Coffee Premix", selectedCategory, viewModel)
+            CategoryChip("Tea Machine", selectedCategory, viewModel)
+            CategoryChip("Coffee Machine", selectedCategory, viewModel)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -114,7 +119,22 @@ fun LeadsScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(leads) { lead ->
-                    LeadItem(lead = lead, onClick = { onLeadClick(lead.id) })
+                    LeadItem(
+                        lead = lead,
+                        onClick = { onLeadClick(lead.id) },
+                        onWhatsApp = {
+                            val phone = lead.phone.replace(Regex("[^0-9+]"), "")
+                            val cleanPhone = phone.replace("+", "")
+                            val url = "https://wa.me/$cleanPhone"
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        },
+                        onCall = {
+                            val phone = lead.phone.replace(Regex("[^0-9+]"), "")
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$phone"))
+                            context.startActivity(intent)
+                        }
+                    )
                 }
             }
         }
@@ -144,22 +164,24 @@ fun StatusFilterChip(
 }
 
 @Composable
-fun CategoryChip(category: String, viewModel: LeadsViewModel) {
+fun CategoryChip(category: String, selectedCategory: String, viewModel: LeadsViewModel) {
+    val isSelected = category == selectedCategory
     Surface(
         shape = MaterialTheme.shapes.small,
-        color = PremixGold.copy(alpha = 0.3f),
+        color = if (isSelected) PremixGold else PremixGold.copy(alpha = 0.3f),
         modifier = Modifier.clickable { viewModel.updateCategory(category) }
     ) {
         Text(
             text = category,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isSelected) Color.White else Color.DarkGray
         )
     }
 }
 
 @Composable
-fun LeadItem(lead: Lead, onClick: () -> Unit) {
+fun LeadItem(lead: Lead, onClick: () -> Unit, onWhatsApp: () -> Unit = {}, onCall: () -> Unit = {}) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -227,11 +249,31 @@ fun LeadItem(lead: Lead, onClick: () -> Unit) {
                     }
                 }
             }
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = null,
-                tint = Color.Gray
-            )
+            Column(horizontalAlignment = Alignment.CenterVertically, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                if (lead.phone.isNotBlank()) {
+                    IconButton(onClick = onWhatsApp, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            Icons.Default.Chat,
+                            contentDescription = "WhatsApp",
+                            tint = Color(0xFF25D366),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    IconButton(onClick = onCall, modifier = Modifier.size(36.dp)) {
+                        Icon(
+                            Icons.Default.Phone,
+                            contentDescription = "Call",
+                            tint = TeaGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Icon(
+                    Icons.Default.ChevronRight,
+                    contentDescription = null,
+                    tint = Color.Gray
+                )
+            }
         }
     }
 }

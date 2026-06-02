@@ -2,42 +2,44 @@ package com.teabiz.crm.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Dashboard : Screen("dashboard", "Dashboard", Icons.Default.Dashboard)
-    object Leads : Screen("leads", "Leads", Icons.Default.People)
-    object Import : Screen("import", "Import", Icons.Default.FileUpload)
-    object Campaigns : Screen("campaigns", "Campaigns", Icons.Default.Campaign)
-    object Marketing : Screen("marketing", "Marketing", Icons.Default.TrendingUp)
-    object Settings : Screen("settings", "Settings", Icons.Default.Settings)
+sealed class Screen(val route: String, val title: String, val icon: ImageVector, val selectedIcon: ImageVector) {
+    object Dashboard : Screen("dashboard", "Home", Icons.Outlined.Dashboard, Icons.Filled.Dashboard)
+    object Leads : Screen("leads", "Leads", Icons.Outlined.People, Icons.Filled.People)
+    object Import : Screen("import", "Import", Icons.Outlined.FileUpload, Icons.Filled.FileUpload)
+    object Campaigns : Screen("campaigns", "Campaigns", Icons.Outlined.Campaign, Icons.Filled.Campaign)
+    object Marketing : Screen("marketing", "Marketing", Icons.Outlined.TrendingUp, Icons.Filled.TrendingUp)
+    object Settings : Screen("settings", "Settings", Icons.Outlined.Settings, Icons.Filled.Settings)
 
-    object LeadDetail : Screen("lead_detail/{leadId}", "Lead Detail", Icons.Default.Person) {
+    object LeadDetail : Screen("lead_detail/{leadId}", "Lead Detail", Icons.Outlined.Person, Icons.Filled.Person) {
         fun createRoute(leadId: String) = "lead_detail/$leadId"
     }
-    object AddLead : Screen("add_lead", "Add Lead", Icons.Default.PersonAdd)
-    object ImportHistory : Screen("import_history", "Import History", Icons.Default.History)
-    object AiFollowUp : Screen("ai_followup/{leadId}", "AI Follow-up", Icons.Default.AutoAwesome) {
+    object AddLead : Screen("add_lead", "Add Lead", Icons.Outlined.PersonAdd, Icons.Filled.PersonAdd)
+    object ImportHistory : Screen("import_history", "Import History", Icons.Outlined.History, Icons.Filled.History)
+    object AiFollowUp : Screen("ai_followup/{leadId}", "AI Follow-up", Icons.Outlined.AutoAwesome, Icons.Filled.AutoAwesome) {
         fun createRoute(leadId: String) = "ai_followup/$leadId"
     }
-    object GmailImport : Screen("gmail_import", "Gmail Import", Icons.Default.Email)
-    object SeoTools : Screen("seo_tools", "SEO Tools", Icons.Default.Search)
-    object CompetitorAnalysis : Screen("competitor_analysis", "Competitors", Icons.Default.Analytics)
-    object ContentCalendar : Screen("content_calendar", "Content Calendar", Icons.Default.CalendarMonth)
-    object GmbManagement : Screen("gmb_management", "Google My Business", Icons.Default.Business)
-    object WhatsAppCatalog : Screen("whatsapp_catalog", "Catalog", Icons.Default.Store)
+    object GmailImport : Screen("gmail_import", "Add Lead", Icons.Outlined.Email, Icons.Filled.Email)
+    object SeoTools : Screen("seo_tools", "SEO Tools", Icons.Outlined.Search, Icons.Filled.Search)
+    object CompetitorAnalysis : Screen("competitor_analysis", "Competitors", Icons.Outlined.Analytics, Icons.Filled.Analytics)
+    object ContentCalendar : Screen("content_calendar", "Content Calendar", Icons.Outlined.CalendarMonth, Icons.Filled.CalendarMonth)
+    object GmbManagement : Screen("gmb_management", "Google My Business", Icons.Outlined.Business, Icons.Filled.Business)
+    object WhatsAppCatalog : Screen("whatsapp_catalog", "Catalog", Icons.Outlined.Store, Icons.Filled.Store)
 }
 
 data class BottomNavItem(
     val screen: Screen,
-    val label: String
+    val label: String,
+    val badgeCount: Int = 0
 )
 
 val bottomNavItems = listOf(
-    BottomNavItem(Screen.Dashboard, "Dashboard"),
+    BottomNavItem(Screen.Dashboard, "Home"),
     BottomNavItem(Screen.Leads, "Leads"),
     BottomNavItem(Screen.Import, "Import"),
     BottomNavItem(Screen.Campaigns, "Campaigns"),
     BottomNavItem(Screen.Marketing, "Marketing"),
-    BottomNavItem(Screen.Settings, "Settings")
+    BottomNavItem(Screen.Settings, "More")
 )

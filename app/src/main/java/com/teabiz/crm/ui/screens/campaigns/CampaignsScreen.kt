@@ -21,6 +21,9 @@ import com.teabiz.crm.ui.viewmodel.CampaignsViewModel
 fun CampaignsScreen(viewModel: CampaignsViewModel) {
     var showCreateDialog by remember { mutableStateOf(false) }
     val campaigns by viewModel.campaigns.collectAsState()
+    val campaignState by viewModel.campaignState.collectAsState()
+    val sendProgress by viewModel.sendProgress.collectAsState()
+    val sendStatus by viewModel.sendStatus.collectAsState()
 
     Column(
         modifier = Modifier
@@ -46,6 +49,61 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        if (campaignState is CampaignsViewModel.CampaignState.Sending) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF25D366).copy(alpha = 0.1f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xFF25D366))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Sending WhatsApp messages...", fontWeight = FontWeight.Bold)
+                    }
+                    if (sendProgress.second > 0) {
+                        LinearProgressIndicator(
+                            progress = { sendProgress.first.toFloat() / sendProgress.second },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color(0xFF25D366)
+                        )
+                        Text(
+                            "${sendProgress.first} / ${sendProgress.second} messages sent",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
+                    }
+                    if (sendStatus.isNotBlank()) {
+                        Text(sendStatus, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (campaignState is CampaignsViewModel.CampaignState.Completed) {
+            val completed = campaignState as CampaignsViewModel.CampaignState.Completed
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = TeaGreen.copy(alpha = 0.1f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = TeaGreen)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Campaign sent! ${completed.sent} delivered, ${completed.failed} failed", fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            LaunchedEffect(Unit) { viewModel.resetState() }
+        }
 
         if (campaigns.isEmpty()) {
             Box(

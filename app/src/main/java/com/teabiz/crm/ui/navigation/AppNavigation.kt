@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -30,6 +32,7 @@ import com.teabiz.crm.ui.screens.marketing.ContentCalendarScreen
 import com.teabiz.crm.ui.screens.marketing.GmbScreen
 import com.teabiz.crm.ui.screens.settings.SettingsScreen
 import com.teabiz.crm.ui.screens.whatsapp.WhatsAppCatalogScreen
+import com.teabiz.crm.ui.theme.TeaGreen
 import com.teabiz.crm.ui.viewmodel.*
 
 @Composable
@@ -66,12 +69,28 @@ fun AppNavigation(
     Scaffold(
         bottomBar = {
             if (showBottomBar) {
-                NavigationBar {
+                NavigationBar(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 8.dp
+                ) {
                     bottomNavItems.forEach { item ->
+                        val selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
                         NavigationBarItem(
-                            icon = { Icon(item.screen.icon, contentDescription = item.label) },
-                            label = { Text(item.label) },
-                            selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true,
+                            icon = {
+                                Icon(
+                                    if (selected) item.screen.selectedIcon else item.screen.icon,
+                                    contentDescription = item.label
+                                )
+                            },
+                            label = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
+                            selected = selected,
+                            colors = NavigationBarItemDefaults.colors(
+                                selectedIconColor = TeaGreen,
+                                selectedTextColor = TeaGreen,
+                                indicatorColor = TeaGreen.copy(alpha = 0.12f),
+                                unselectedIconColor = Color.Gray,
+                                unselectedTextColor = Color.Gray
+                            ),
                             onClick = {
                                 navController.navigate(item.screen.route) {
                                     popUpTo(navController.graph.findStartDestination().id) {

@@ -27,6 +27,9 @@ class CampaignsViewModel @Inject constructor(
     private val _sendProgress = MutableStateFlow(Pair(0, 0))
     val sendProgress: StateFlow<Pair<Int, Int>> = _sendProgress
 
+    private val _sendStatus = MutableStateFlow("")
+    val sendStatus: StateFlow<String> = _sendStatus
+
     fun createCampaign(name: String, template: String, category: String) {
         viewModelScope.launch {
             val campaign = Campaign(
@@ -62,14 +65,18 @@ class CampaignsViewModel @Inject constructor(
                     lead.phone to personalizedMessage
                 }
 
-                var sentCount = 0
-                var failedCount = 0
+                val results = whatsappService.sendBulkMessages(
+                    messages = messages,
+                    onProgress = { sent, total ->
+                        _sendProgress.value = Pair(sent, total)
+                    },
+                    onStatus = { status ->
+                        _sendStatus.value = status
+                    }
+                )
 
-                whatsappService.sendBulkMessages(messages) { sent, total ->
-                    _sendProgress.value = Pair(sent, total)
-                }.forEach { result ->
-                    if (result.status == "SENT") sentCount++ else failedCount++
-                }
+                val sentCount = results.count { it.status == "SENT" }
+                val failedCount = results.count { it.status == "FAILED" }
 
                 leadRepository.updateCampaign(campaign.copy(
                     status = "COMPLETED",
@@ -94,6 +101,7 @@ class CampaignsViewModel @Inject constructor(
 
     fun resetState() {
         _campaignState.value = CampaignState.Idle
+        _sendStatus.value = ""
     }
 
     sealed class CampaignState {
