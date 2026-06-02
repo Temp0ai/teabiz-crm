@@ -158,7 +158,7 @@ fun AppNavigation(
             }
 
             composable(Screen.HashtagGenerator.route) {
-                val hashtagViewModel: HashtagViewModel = hiltViewModel()
+                val hashtagViewModel: HashtagViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                 com.teabiz.crm.ui.screens.marketing.HashtagGeneratorScreen(
                     viewModel = hashtagViewModel,
                     onBack = { navController.popBackStack() }
