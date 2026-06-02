@@ -35,10 +35,6 @@ class SettingsViewModel @Inject constructor(
         .map { it ?: "" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
-    val gmailClientId: StateFlow<String> = marketingRepository.getSettingFlow("gmail_client_id")
-        .map { it ?: "" }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
-
     val businessName: StateFlow<String> = marketingRepository.getSettingFlow("business_name")
         .map { it ?: "TeaBiz" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "TeaBiz")
@@ -70,12 +66,6 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun saveGmailClientId(clientId: String) {
-        viewModelScope.launch {
-            marketingRepository.setSetting("gmail_client_id", clientId)
-        }
-    }
-
     fun saveBusinessName(name: String) {
         viewModelScope.launch {
             marketingRepository.setSetting("business_name", name)
@@ -87,7 +77,6 @@ class SettingsViewModel @Inject constructor(
         aiModel: String,
         messageTone: String,
         whatsappApiUrl: String,
-        gmailClientId: String,
         businessName: String
     ) {
         viewModelScope.launch {
@@ -95,7 +84,6 @@ class SettingsViewModel @Inject constructor(
             marketingRepository.setSetting("ai_model", aiModel)
             marketingRepository.setSetting("message_tone", messageTone)
             marketingRepository.setSetting("whatsapp_api_url", whatsappApiUrl)
-            marketingRepository.setSetting("gmail_client_id", gmailClientId)
             marketingRepository.setSetting("business_name", businessName)
 
             aiService.configure(apiKey, aiModel)

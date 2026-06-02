@@ -12,10 +12,10 @@ interface FollowUpDao {
     @Query("SELECT * FROM follow_ups WHERE leadId = :leadId ORDER BY createdAt DESC")
     fun getFollowUpsByLead(leadId: String): Flow<List<FollowUp>>
 
-    @Query("SELECT * FROM follow_ups WHERE status = 'PENDING' AND scheduledAt <= :currentTime")
+    @Query("SELECT * FROM follow_ups WHERE status = 'PENDING' AND (scheduledAt <= :currentTime OR scheduledAt IS NULL)")
     fun getPendingFollowUps(currentTime: Long): Flow<List<FollowUp>>
 
-    @Query("SELECT * FROM follow_ups WHERE status = 'PENDING' AND scheduledAt <= :currentTime")
+    @Query("SELECT * FROM follow_ups WHERE status = 'PENDING' AND (scheduledAt <= :currentTime OR scheduledAt IS NULL)")
     suspend fun getPendingFollowUpsOnce(currentTime: Long): List<FollowUp>
 
     @Query("SELECT * FROM follow_ups WHERE leadId = :leadId AND status != 'FAILED' ORDER BY createdAt DESC LIMIT 1")

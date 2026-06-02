@@ -7,6 +7,7 @@ import android.os.Build
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.teabiz.crm.data.local.AppDatabase
+import com.teabiz.crm.worker.FollowUpWorker
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -26,6 +27,7 @@ class TeaBizApp : Application(), Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannels()
+        FollowUpWorker.schedule(applicationContext)
     }
 
     private fun createNotificationChannels() {

@@ -33,6 +33,9 @@ class MarketingViewModel @Inject constructor(
     private val _isResearching = MutableStateFlow(false)
     val isResearching: StateFlow<Boolean> = _isResearching
 
+    private val _generatedHashtags = MutableStateFlow<List<String>>(emptyList())
+    val generatedHashtags: StateFlow<List<String>> = _generatedHashtags
+
     private val _researchResults = MutableStateFlow<List<KeywordResearchResult>>(emptyList())
     val researchResults: StateFlow<List<KeywordResearchResult>> = _researchResults
 
@@ -72,19 +75,22 @@ class MarketingViewModel @Inject constructor(
             _isResearching.value = true
             try {
                 val response = aiService.analyzeCompetitor(name, website)
-                // Parse AI response into structured data
+                val content = response.content
+                val strengths = content.lines().filter { it.contains("strength", ignoreCase = true) }.map { it.trim().removePrefix("- ").removePrefix("* ") }
+                val weaknesses = content.lines().filter { it.contains("weakness", ignoreCase = true) }.map { it.trim().removePrefix("- ").removePrefix("* ") }
+                val opportunities = content.lines().filter { it.contains("opportunit", ignoreCase = true) }.map { it.trim().removePrefix("- ").removePrefix("* ") }
+
                 val analysis = CompetitorAnalysisResult(
                     competitorName = name,
                     website = website,
                     estimatedTraffic = 0,
                     topKeywords = emptyList(),
-                    strengths = listOf("AI analysis available in full version"),
-                    weaknesses = emptyList(),
-                    opportunities = emptyList()
+                    strengths = strengths.ifEmpty { listOf("See AI analysis") },
+                    weaknesses = weaknesses,
+                    opportunities = opportunities
                 )
                 _competitorAnalysis.value = analysis
 
-                // Save competitor
                 val competitor = Competitor(
                     name = name,
                     website = website,
@@ -121,10 +127,12 @@ class MarketingViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val response = aiService.generateHashtags(productType, platform)
-                val hashtags = response.content.split("\n").map { it.trim() }.filter { it.isNotBlank() }
-                // Return hashtags via flow or callback
+                val hashtags = response.content.lines()
+                    .map { it.trim().removePrefix("#") }
+                    .filter { it.isNotBlank() }
+                _generatedHashtags.value = hashtags
             } catch (e: Exception) {
-                // Handle error
+                _generatedHashtags.value = emptyList()
             }
         }
     }

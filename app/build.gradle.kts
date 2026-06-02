@@ -95,8 +95,6 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
 
     // Network
-    implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
@@ -110,13 +108,6 @@ dependencies {
     implementation("androidx.hilt:hilt-work:1.1.0")
     ksp("androidx.hilt:hilt-compiler:1.1.0")
 
-    // Security
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    implementation("androidx.biometric:biometric:1.1.0")
-
-    // DataStore
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-
     // Image Loading
     implementation("io.coil-kt:coil-compose:2.5.0")
 
@@ -125,14 +116,6 @@ dependencies {
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
-
-    // Firebase
-    implementation("com.google.firebase:firebase-analytics-ktx:21.5.0")
-    implementation("com.google.firebase:firebase-crashlytics-ktx:18.6.0")
-
-    // Accompanist (permissions)
-    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

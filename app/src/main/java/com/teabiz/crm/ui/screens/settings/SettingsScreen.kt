@@ -23,14 +23,12 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val aiModel by viewModel.aiModel.collectAsState()
     val messageTone by viewModel.messageTone.collectAsState()
     val whatsappApiUrl by viewModel.whatsappApiUrl.collectAsState()
-    val gmailClientId by viewModel.gmailClientId.collectAsState()
     val businessName by viewModel.businessName.collectAsState()
 
     var editApiKey by remember(apiKey) { mutableStateOf(apiKey) }
     var editAiModel by remember(aiModel) { mutableStateOf(aiModel) }
     var editMessageTone by remember(messageTone) { mutableStateOf(messageTone) }
     var editWhatsappUrl by remember(whatsappApiUrl) { mutableStateOf(whatsappApiUrl) }
-    var editGmailClientId by remember(gmailClientId) { mutableStateOf(gmailClientId) }
     var editBusinessName by remember(businessName) { mutableStateOf(businessName) }
 
     Column(
@@ -85,14 +83,6 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     icon = Icons.Default.Chat,
                     placeholder = "http://localhost:3000"
                 )
-
-                SettingsTextField(
-                    value = editGmailClientId,
-                    onValueChange = { editGmailClientId = it },
-                    label = "Gmail Client ID",
-                    icon = Icons.Default.Email,
-                    placeholder = "your-client-id.apps.googleusercontent.com"
-                )
             }
         }
 
@@ -146,7 +136,6 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     aiModel = editAiModel,
                     messageTone = editMessageTone,
                     whatsappApiUrl = editWhatsappUrl,
-                    gmailClientId = editGmailClientId,
                     businessName = editBusinessName
                 )
             },

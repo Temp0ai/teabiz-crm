@@ -1,6 +1,8 @@
 package com.teabiz.crm.ui.navigation
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,12 +43,23 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val showBottomBar = when (currentDestination?.route) {
-        Screen.LeadDetail.route, Screen.AddLead.route,
-        Screen.AiFollowUp.route, Screen.GmailImport.route,
-        Screen.WhatsAppCatalog.route -> false
-        else -> true
-    }
+    val showBottomBar = currentDestination?.route?.let { route ->
+        route == Screen.Dashboard.route ||
+        route == Screen.Leads.route ||
+        route == Screen.Import.route ||
+        route == Screen.Campaigns.route ||
+        route == Screen.Marketing.route ||
+        route == Screen.Settings.route ||
+        route.startsWith("lead_detail") ||
+        route.startsWith("add_lead") ||
+        route.startsWith("ai_followup") ||
+        route.startsWith("gmail_import") ||
+        route.startsWith("whatsapp_catalog") ||
+        route.startsWith("seo_tools") ||
+        route.startsWith("competitor") ||
+        route.startsWith("content_calendar") ||
+        route.startsWith("gmb")
+    } ?: false
 
     Scaffold(
         bottomBar = {
@@ -148,6 +161,12 @@ fun AppNavigation(
                     viewModel = importViewModel,
                     onBack = { navController.popBackStack() }
                 )
+            }
+
+            composable(Screen.ImportHistory.route) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text("Import History - Coming Soon")
+                }
             }
 
             composable(

@@ -73,10 +73,10 @@ fun LeadsScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            FilterChip("ALL", "All", selectedFilter) { viewModel.updateFilter(it) }
-            FilterChip("NEW", "New", selectedFilter) { viewModel.updateFilter(it) }
-            FilterChip("FOLLOW_UP", "Follow-up", selectedFilter) { viewModel.updateFilter(it) }
-            FilterChip("CONVERTED", "Converted", selectedFilter) { viewModel.updateFilter(it) }
+            StatusFilterChip("ALL", "All", selectedFilter) { viewModel.updateFilter(it) }
+            StatusFilterChip("NEW", "New", selectedFilter) { viewModel.updateFilter(it) }
+            StatusFilterChip("FOLLOW_UP", "Follow-up", selectedFilter) { viewModel.updateFilter(it) }
+            StatusFilterChip("CONVERTED", "Converted", selectedFilter) { viewModel.updateFilter(it) }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -122,7 +122,7 @@ fun LeadsScreen(
 }
 
 @Composable
-fun FilterChip(
+fun StatusFilterChip(
     value: String,
     label: String,
     selected: String,
