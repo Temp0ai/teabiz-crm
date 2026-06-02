@@ -1,6 +1,10 @@
 package com.teabiz.crm.di
 
+import com.teabiz.crm.data.remote.AiService
+import com.teabiz.crm.data.remote.WhatsAppService
+import com.teabiz.crm.data.remote.SEOService
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
@@ -24,5 +28,23 @@ object NetworkModule {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideWhatsAppService(okHttpClient: OkHttpClient): WhatsAppService {
+        return WhatsAppService(okHttpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiService(okHttpClient: OkHttpClient): AiService {
+        return AiService(okHttpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSEOService(okHttpClient: OkHttpClient): SEOService {
+        return SEOService(okHttpClient)
     }
 }
