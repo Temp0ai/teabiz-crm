@@ -1,26 +1,5 @@
 package com.teabiz.crm.data.model
 
-data class EmailMessage(
-    val id: String,
-    val threadId: String,
-    val from: String,
-    val fromName: String,
-    val subject: String,
-    val body: String,
-    val snippet: String,
-    val date: Long,
-    val isRead: Boolean,
-    val labels: List<String> = emptyList()
-)
-
-data class GmailAuthState(
-    val isAuthenticated: Boolean = false,
-    val accessToken: String? = null,
-    val refreshToken: String? = null,
-    val email: String? = null,
-    val error: String? = null
-)
-
 data class WhatsAppMessage(
     val id: String = "",
     val recipientPhone: String,

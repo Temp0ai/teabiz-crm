@@ -56,6 +56,7 @@ android {
             excludes += "/META-INF/INDEX.LIST"
             excludes += "/META-INF/NOTICE"
             excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/DEPENDENCIES"
             excludes += "/META-INF/*.DSA"
             excludes += "/META-INF/*.RSA"
         }
@@ -98,11 +99,6 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
-    // Google APIs (Gmail + GMB)
-    implementation("com.google.api-client:google-api-client:2.2.0")
-    implementation("com.google.oauth-client:google-oauth-client-jetty:1.34.1")
-    implementation("com.google.apis:google-api-services-gmail:v1-rev20260525-2.0.0")
 
     // Excel/CSV Import
     implementation("org.apache.poi:poi:5.2.5")

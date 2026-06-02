@@ -1,7 +1,6 @@
 package com.teabiz.crm.di
 
 import com.teabiz.crm.data.remote.AiService
-import com.teabiz.crm.data.remote.GmailService
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.remote.SEOService
 import dagger.Module
@@ -10,8 +9,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import javax.inject.Singleton
 
@@ -31,12 +28,6 @@ object NetworkModule {
             .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideGmailService(okHttpClient: OkHttpClient): GmailService {
-        return GmailService(okHttpClient)
     }
 
     @Provides

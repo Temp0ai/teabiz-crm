@@ -5,7 +5,6 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.teabiz.crm.data.model.*
 import com.teabiz.crm.data.remote.AiService
-import com.teabiz.crm.data.remote.GmailService
 import com.teabiz.crm.data.repository.LeadRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -16,7 +15,6 @@ import javax.inject.Inject
 class ImportViewModel @Inject constructor(
     application: Application,
     private val leadRepository: LeadRepository,
-    private val gmailService: GmailService,
     private val aiService: AiService
 ) : AndroidViewModel(application) {
 
