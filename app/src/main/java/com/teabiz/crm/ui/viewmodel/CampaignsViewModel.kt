@@ -157,63 +157,63 @@ class CampaignsViewModel @Inject constructor(
                     }
                 } else {
                     leads
+                }.filter { it.phone.isNotBlank() }
+
+                if (filteredLeads.isEmpty()) {
+                    _campaignState.value = CampaignState.Error("No contacts found with phone numbers")
+                    return@launch
                 }
 
-                val messages = filteredLeads.map { lead ->
+                val total = filteredLeads.size
+                _sendProgress.value = Pair(0, total)
+                _sendStatus.value = "Preparing to send to $total contacts..."
+
+                leadRepository.updateCampaign(campaign.copy(
+                    status = "RUNNING",
+                    totalRecipients = total,
+                    totalBatches = 1
+                ))
+
+                var sentCount = 0
+                var failedCount = 0
+
+                for ((index, lead) in filteredLeads.withIndex()) {
                     val personalizedMessage = campaign.messageTemplate
                         .replace("{name}", lead.name)
                         .replace("{company}", lead.company)
                         .replace("{product}", lead.productInterest.joinToString(", "))
-                    lead.phone to personalizedMessage
-                }
 
-                val batchSize = campaign.batchSize.coerceAtLeast(50)
-                val totalBatches = (messages.size + batchSize - 1) / batchSize
-                val allResults = mutableListOf<WhatsAppMessage>()
+                    val cleanPhone = lead.phone.replace(Regex("[^0-9]"), "")
+                    if (cleanPhone.length < 10) {
+                        failedCount++
+                        _sendProgress.value = Pair(index + 1, total)
+                        continue
+                    }
 
-                for (batchIndex in 0 until totalBatches) {
-                    val start = batchIndex * batchSize
-                    val end = minOf(start + batchSize, messages.size)
-                    val batchMessages = messages.subList(start, end)
+                    try {
+                        val url = "https://wa.me/$cleanPhone?text=${Uri.encode(personalizedMessage)}"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        context.startActivity(intent)
 
-                    _sendStatus.value = "Batch ${batchIndex + 1}/$totalBatches - Sending to ${batchMessages.size} contacts..."
+                        sentCount++
+                        _sendProgress.value = Pair(index + 1, total)
+                        _sendStatus.value = "Opened WhatsApp for ${lead.name} (${index + 1}/$total)"
 
-                    leadRepository.updateCampaign(campaign.copy(
-                        status = "RUNNING",
-                        currentBatch = batchIndex + 1,
-                        totalBatches = totalBatches,
-                        totalRecipients = filteredLeads.size
-                    ))
-
-                    val results = whatsappService.sendBulkMessages(
-                        messages = batchMessages,
-                        onProgress = { sent, total ->
-                            val overallSent = (batchIndex * batchSize) + sent
-                            _sendProgress.value = Pair(overallSent, messages.size)
-                            _sendStatus.value = "Batch ${batchIndex + 1}/$totalBatches - ${sent}/${total} in this batch (${overallSent}/${messages.size} total)"
-                        },
-                        onStatus = { status ->
-                            _sendStatus.value = status
-                        }
-                    )
-                    allResults.addAll(results)
-
-                    if (batchIndex < totalBatches - 1) {
-                        _sendStatus.value = "Batch ${batchIndex + 1} complete. Waiting 30s before next batch..."
-                        kotlinx.coroutines.delay(30_000L)
+                        kotlinx.coroutines.delay(2000L)
+                    } catch (e: Exception) {
+                        failedCount++
+                        _sendProgress.value = Pair(index + 1, total)
                     }
                 }
-
-                val sentCount = allResults.count { it.status == "SENT" }
-                val failedCount = allResults.count { it.status == "FAILED" }
 
                 leadRepository.updateCampaign(campaign.copy(
                     status = "COMPLETED",
                     sentCount = sentCount,
                     failedCount = failedCount,
-                    totalRecipients = filteredLeads.size,
+                    totalRecipients = total,
                     completedAt = System.currentTimeMillis(),
-                    currentBatch = totalBatches,
+                    currentBatch = 1,
                     currentBatchProgress = "Complete"
                 ))
 
