@@ -3,6 +3,7 @@ package com.teabiz.crm.di
 import com.teabiz.crm.data.remote.AiService
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.remote.SEOService
+import com.teabiz.crm.data.remote.GeminiService
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,5 +47,11 @@ object NetworkModule {
     @Singleton
     fun provideSEOService(okHttpClient: OkHttpClient): SEOService {
         return SEOService(okHttpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeminiService(): GeminiService {
+        return GeminiService()
     }
 }

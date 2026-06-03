@@ -295,14 +295,38 @@ fun CreateCampaignDialog(
     var category by remember { mutableStateOf("") }
     var batchSize by remember { mutableIntStateOf(100) }
     var showBatchDropdown by remember { mutableStateOf(false) }
+    var showCategoryDropdown by remember { mutableStateOf(false) }
     val selectedMediaUri by viewModel.selectedMediaUri.collectAsState()
     val selectedMediaType by viewModel.selectedMediaType.collectAsState()
     val isGeneratingAiText by viewModel.isGeneratingAiText.collectAsState()
+    val contactCount by viewModel.contactCount.collectAsState()
 
     var aiTone by remember { mutableStateOf("Professional") }
     var aiLanguage by remember { mutableStateOf("English") }
     var showToneDropdown by remember { mutableStateOf(false) }
     var showLanguageDropdown by remember { mutableStateOf(false) }
+
+    val productCategories = listOf(
+        "All Contacts",
+        "Tea Premix",
+        "Coffee Premix",
+        "Nescafe Premix",
+        "Tea Vending Machine",
+        "Coffee Vending Machine",
+        "Tea & Coffee Vending Machine",
+        "Tea Machine",
+        "Coffee Machine",
+        "Instant Chai",
+        "Masala Chai Premix"
+    )
+
+    LaunchedEffect(category) {
+        if (category.isBlank() || category == "All Contacts") {
+            viewModel.getAllLeadsCount()
+        } else {
+            viewModel.getContactCountByCategory(category)
+        }
+    }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -326,7 +350,7 @@ fun CreateCampaignDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create Campaign") },
+        title = { Text("Create WhatsApp Campaign") },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item {
@@ -339,14 +363,75 @@ fun CreateCampaignDialog(
                     )
                 }
 
+                // Product Category Dropdown with Contact Count
                 item {
-                    OutlinedTextField(
-                        value = category,
-                        onValueChange = { category = it },
-                        label = { Text("Target Category (e.g., Tea Premix)") },
+                    Box {
+                        ExposedDropdownMenuBox(
+                            expanded = showCategoryDropdown,
+                            onExpandedChange = { showCategoryDropdown = it }
+                        ) {
+                            OutlinedTextField(
+                                value = category.ifBlank { "All Contacts" },
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Target Product Category") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown) },
+                                leadingIcon = { Icon(Icons.Default.FilterList, contentDescription = null) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = showCategoryDropdown,
+                                onDismissRequest = { showCategoryDropdown = false }
+                            ) {
+                                productCategories.forEach { cat ->
+                                    DropdownMenuItem(
+                                        text = { Text(cat) },
+                                        onClick = {
+                                            category = if (cat == "All Contacts") "" else cat
+                                            showCategoryDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    // Contact count display
+                    Card(
                         modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (contactCount > 0) TeaGreen.copy(alpha = 0.1f) else Color.Gray.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.People,
+                                contentDescription = null,
+                                tint = if (contactCount > 0) TeaGreen else Color.Gray,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    "$contactCount contacts found",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (contactCount > 0) TeaGreen else Color.Gray
+                                )
+                                if (category.isNotBlank()) {
+                                    Text(
+                                        "Filtered by: $category",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.Gray
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
 
                 item {
@@ -383,6 +468,7 @@ fun CreateCampaignDialog(
                     }
                 }
 
+                // AI Tone + Language
                 item {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -455,6 +541,7 @@ fun CreateCampaignDialog(
                     }
                 }
 
+                // AI Generate Button
                 item {
                     Button(
                         onClick = {
@@ -467,22 +554,23 @@ fun CreateCampaignDialog(
                                 onResult = { generated -> template = generated }
                             )
                         },
-                        enabled = !isGeneratingAiText && category.isNotBlank(),
+                        enabled = !isGeneratingAiText,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C4DFF))
                     ) {
                         if (isGeneratingAiText) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Generating...")
+                            Text("AI Generating...")
                         } else {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("AI Generate Message")
+                            Text("AI Generate Engagement Message")
                         }
                     }
                 }
 
+                // Message Template
                 item {
                     OutlinedTextField(
                         value = template,
@@ -498,6 +586,7 @@ fun CreateCampaignDialog(
                     )
                 }
 
+                // Media Attach
                 item {
                     HorizontalDivider()
                     Spacer(modifier = Modifier.height(4.dp))
@@ -572,8 +661,8 @@ fun CreateCampaignDialog(
                     )
                     viewModel.clearSelectedMedia()
                 },
-                enabled = name.isNotBlank() && template.isNotBlank()
-            ) { Text("Create") }
+                enabled = name.isNotBlank() && template.isNotBlank() && contactCount > 0
+            ) { Text("Create Campaign") }
         },
         dismissButton = {
             TextButton(onClick = {

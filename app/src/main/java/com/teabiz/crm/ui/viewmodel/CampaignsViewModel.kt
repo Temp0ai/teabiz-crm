@@ -38,6 +38,41 @@ class CampaignsViewModel @Inject constructor(
     private val _selectedMediaUri = MutableStateFlow<Uri?>(null)
     val selectedMediaUri: StateFlow<Uri?> = _selectedMediaUri
 
+    private val _contactCount = MutableStateFlow(0)
+    val contactCount: StateFlow<Int> = _contactCount
+
+    private val _filteredLeads = MutableStateFlow<List<Lead>>(emptyList())
+    val filteredLeads: StateFlow<List<Lead>> = _filteredLeads
+
+    fun getContactCountByCategory(category: String) {
+        viewModelScope.launch {
+            val leads = leadRepository.getWhatsAppOptInLeads().first()
+            val count = if (category.isBlank()) {
+                leads.size
+            } else {
+                leads.count { lead ->
+                    lead.productInterest.any { it.contains(category, ignoreCase = true) }
+                }
+            }
+            _contactCount.value = count
+            _filteredLeads.value = if (category.isBlank()) {
+                leads
+            } else {
+                leads.filter { lead ->
+                    lead.productInterest.any { it.contains(category, ignoreCase = true) }
+                }
+            }
+        }
+    }
+
+    fun getAllLeadsCount() {
+        viewModelScope.launch {
+            val leads = leadRepository.getWhatsAppOptInLeads().first()
+            _contactCount.value = leads.size
+            _filteredLeads.value = leads
+        }
+    }
+
     private val _selectedMediaType = MutableStateFlow("")
     val selectedMediaType: StateFlow<String> = _selectedMediaType
 

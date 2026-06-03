@@ -37,3 +37,7 @@
 
 # Keep data classes for serialization
 -keep class com.teabiz.crm.data.remote.** { *; }
+
+# Gemini AI
+-keep class com.google.ai.client.generativeai.** { *; }
+-dontwarn com.google.ai.client.generativeai.**

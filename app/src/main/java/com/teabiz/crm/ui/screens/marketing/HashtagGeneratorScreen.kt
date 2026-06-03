@@ -37,15 +37,16 @@ fun HashtagGeneratorScreen(
     val isGenerating by viewModel.isGenerating.collectAsState()
     val selectedPlatform by viewModel.selectedPlatform.collectAsState()
     val selectedImageUri by viewModel.selectedImageUri.collectAsState()
+    val productType by viewModel.productType.collectAsState()
+    val geminiApiKey by viewModel.geminiApiKey.collectAsState()
     val context = LocalContext.current
 
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let { viewModel.setImageUri(it) }
-    }
+    var showProductDropdown by remember { mutableStateOf(false) }
+    var showPlatformDropdown by remember { mutableStateOf(false) }
+    var showGeminiKeyInput by remember { mutableStateOf(false) }
+    var geminiKeyText by remember { mutableStateOf("") }
 
-    val videoPicker = rememberLauncherForActivityResult(
+    val imagePicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let { viewModel.setImageUri(it) }
@@ -76,22 +77,66 @@ fun HashtagGeneratorScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Generate Hashtags",
+                text = "Generate Trendy Hashtags",
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Upload a tea premix image or video and get optimized hashtags for Instagram & Facebook",
+                text = "AI analyzes current trends on Instagram & Facebook for your product",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
 
+            // Product Type Dropdown
             Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("Content Upload", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text("Product Type", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+
+                    Box {
+                        ExposedDropdownMenuBox(
+                            expanded = showProductDropdown,
+                            onExpandedChange = { showProductDropdown = it }
+                        ) {
+                            OutlinedTextField(
+                                value = productType,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Select Product") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showProductDropdown) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(),
+                                leadingIcon = { Icon(Icons.Default.LocalCafe, contentDescription = null) }
+                            )
+                            ExposedDropdownMenu(
+                                expanded = showProductDropdown,
+                                onDismissRequest = { showProductDropdown = false }
+                            ) {
+                                HashtagViewModel.PRODUCT_TYPES.forEach { type ->
+                                    DropdownMenuItem(
+                                        text = { Text(type) },
+                                        onClick = {
+                                            viewModel.updateProductType(type)
+                                            showProductDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Content Upload
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Content Upload (Optional)", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
                     if (selectedImageUri != null) {
                         Card(
@@ -112,7 +157,7 @@ fun HashtagGeneratorScreen(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(150.dp)
+                                .height(120.dp)
                                 .border(2.dp, Color.LightGray.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
                                 .background(Color.LightGray.copy(alpha = 0.1f), RoundedCornerShape(12.dp)),
                             contentAlignment = Alignment.Center
@@ -121,39 +166,27 @@ fun HashtagGeneratorScreen(
                                 Icon(
                                     Icons.Default.AddAPhoto,
                                     contentDescription = null,
-                                    modifier = Modifier.size(48.dp),
+                                    modifier = Modifier.size(40.dp),
                                     tint = Color.Gray
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text("Tap buttons below to upload", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                Text("Upload photo/video of your product", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                             }
                         }
                     }
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    OutlinedButton(
+                        onClick = { imagePicker.launch("image/*") },
+                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        OutlinedButton(
-                            onClick = { imagePicker.launch("image/*") },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Image, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Photo")
-                        }
-                        OutlinedButton(
-                            onClick = { videoPicker.launch("video/*") },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.Videocam, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Video")
-                        }
+                        Icon(Icons.Default.Image, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Select Photo or Video")
                     }
                 }
             }
 
+            // Platform Selection
             Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -173,6 +206,50 @@ fun HashtagGeneratorScreen(
                 }
             }
 
+            // Gemini API Key (Optional - for trending hashtags)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A73E8).copy(alpha = 0.05f))
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFF1A73E8))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Gemini AI (for Trending Hashtags)", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    }
+                    Text("Add Gemini API key for current trending hashtags analysis", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+
+                    if (geminiApiKey.isNotBlank()) {
+                        Text("Gemini API configured", style = MaterialTheme.typography.bodySmall, color = TeaGreen)
+                    } else {
+                        OutlinedTextField(
+                            value = geminiKeyText,
+                            onValueChange = { geminiKeyText = it },
+                            label = { Text("Gemini API Key (optional)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        if (geminiKeyText.isNotBlank()) {
+                            Button(
+                                onClick = {
+                                    viewModel.setGeminiApiKey(geminiKeyText)
+                                    geminiKeyText = ""
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
+                            ) {
+                                Text("Save Gemini Key")
+                            }
+                        }
+                        Text("Get free key from: aistudio.google.com/app/apikey", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                    }
+                }
+            }
+
+            // Generate Button
             Button(
                 onClick = { viewModel.generateHashtags() },
                 modifier = Modifier.fillMaxWidth(),
@@ -182,14 +259,15 @@ fun HashtagGeneratorScreen(
                 if (isGenerating) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Generating...", color = Color.White)
+                    Text("AI Analyzing Trends...", color = Color.White)
                 } else {
                     Icon(Icons.Default.AutoAwesome, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Generate Hashtags")
+                    Text("Generate Trendy Hashtags")
                 }
             }
 
+            // Generated Hashtags
             if (generatedHashtags.isNotEmpty()) {
                 Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
                     Column(
@@ -208,8 +286,10 @@ fun HashtagGeneratorScreen(
                         HorizontalDivider()
 
                         if (selectedPlatform == "Both") {
-                            Text("Instagram", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFFE1306C))
                             val instaTags = generatedHashtags.filterIndexed { i, _ -> i < generatedHashtags.size / 2 }
+                            val fbTags = generatedHashtags.filterIndexed { i, _ -> i >= generatedHashtags.size / 2 }
+
+                            Text("Instagram", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFFE1306C))
                             Text(
                                 text = instaTags.joinToString(" ") { "#$it" },
                                 style = MaterialTheme.typography.bodyMedium,
@@ -219,7 +299,6 @@ fun HashtagGeneratorScreen(
                             Spacer(modifier = Modifier.height(8.dp))
 
                             Text("Facebook", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = Color(0xFF1877F2))
-                            val fbTags = generatedHashtags.filterIndexed { i, _ -> i >= generatedHashtags.size / 2 }
                             Text(
                                 text = fbTags.joinToString(" ") { "#$it" },
                                 style = MaterialTheme.typography.bodyMedium,
@@ -268,19 +347,6 @@ fun HashtagGeneratorScreen(
                             }
                         }
                     }
-                }
-            }
-
-            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("Tips for Tea Premix Posts", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                    Text("• Upload a clear photo of your tea premix product or setup", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    Text("• Include your shop/machine in the image for local hashtags", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    Text("• Instagram allows up to 30 hashtags, Facebook works best with 3-5", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                    Text("• Mix popular and niche hashtags for maximum reach", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 }
             }
 
