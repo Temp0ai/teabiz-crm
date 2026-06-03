@@ -35,14 +35,18 @@ object ExcelParser {
     )
 
     private val columnAliases = mapOf(
-        "name" to listOf("name", "lead name", "contact name", "company name", "firm", "contact"),
+        "name" to listOf("name", "lead name", "contact name", "company name", "firm", "contact", "customer"),
         "email" to listOf("email", "email id", "email address", "mail", "e-mail"),
-        "phone" to listOf("phone", "mobile", "contact number", "telephone", "cell", "mobile number"),
-        "product" to listOf("product", "product interest", "requirement", "service", "item", "product type"),
-        "message" to listOf("message", "inquiry", "details", "description", "notes", "query", "remarks"),
+        "phone" to listOf("phone", "mobile", "contact number", "telephone", "cell", "mobile number", "number", "whatsapp", "phone number"),
+        "product" to listOf("product", "product interest", "requirement", "service", "item", "product type", "interest"),
+        "message" to listOf("message", "inquiry", "details", "description", "notes", "query", "remarks", "comment"),
         "company" to listOf("company", "firm", "organization", "business name", "business"),
-        "city" to listOf("city", "location", "area", "region", "place")
+        "city" to listOf("city", "location", "area", "region", "place", "address", "state")
     )
+
+    private val phoneRegex = Regex("(?:\\+91|0)?[\\s-]?[6-9]\\d{9}|\\+\\d{1,3}[\\s-]?\\d{4,14}|\\d{10,13}")
+
+    private val emailRegex = Regex("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}")
 
     fun parseExcel(context: Context, uri: Uri): ParseResult {
         val inputStream = context.contentResolver.openInputStream(uri) ?: return ParseResult(
@@ -50,9 +54,6 @@ object ExcelParser {
         )
 
         val fileName = getFileName(context, uri)
-        val leads = mutableListOf<Lead>()
-        val errors = mutableListOf<ParseError>()
-        var totalRows = 0
 
         try {
             when {
@@ -179,13 +180,13 @@ object ExcelParser {
         headers.forEachIndexed { index, header ->
             val normalizedHeader = header.lowercase().trim()
             when {
-                columnAliases["name"]?.any { normalizedHeader.contains(it) } == true -> nameCol = index
-                columnAliases["email"]?.any { normalizedHeader.contains(it) } == true -> emailCol = index
-                columnAliases["phone"]?.any { normalizedHeader.contains(it) } == true -> phoneCol = index
-                columnAliases["product"]?.any { normalizedHeader.contains(it) } == true -> productCol = index
-                columnAliases["message"]?.any { normalizedHeader.contains(it) } == true -> messageCol = index
-                columnAliases["company"]?.any { normalizedHeader.contains(it) } == true -> companyCol = index
-                columnAliases["city"]?.any { normalizedHeader.contains(it) } == true -> cityCol = index
+                columnAliases["name"]?.any { normalizedHeader.contains(it) } == true && nameCol == -1 -> nameCol = index
+                columnAliases["email"]?.any { normalizedHeader.contains(it) } == true && emailCol == -1 -> emailCol = index
+                columnAliases["phone"]?.any { normalizedHeader.contains(it) } == true && phoneCol == -1 -> phoneCol = index
+                columnAliases["product"]?.any { normalizedHeader.contains(it) } == true && productCol == -1 -> productCol = index
+                columnAliases["message"]?.any { normalizedHeader.contains(it) } == true && messageCol == -1 -> messageCol = index
+                columnAliases["company"]?.any { normalizedHeader.contains(it) } == true && companyCol == -1 -> companyCol = index
+                columnAliases["city"]?.any { normalizedHeader.contains(it) } == true && cityCol == -1 -> cityCol = index
             }
         }
 
@@ -205,27 +206,90 @@ object ExcelParser {
         mapping: ColumnMapping,
         rowNumber: Int
     ): Lead? {
-        val name = cells.getOrNull(mapping.nameColumn)?.trim() ?: ""
-        val email = cells.getOrNull(mapping.emailColumn)?.trim() ?: ""
-        val phone = cells.getOrNull(mapping.phoneColumn)?.trim() ?: ""
+        var name = cells.getOrNull(mapping.nameColumn)?.trim() ?: ""
+        var email = cells.getOrNull(mapping.emailColumn)?.trim() ?: ""
+        var phone = cells.getOrNull(mapping.phoneColumn)?.trim() ?: ""
+        var city = cells.getOrNull(mapping.cityColumn)?.trim() ?: ""
+        var company = cells.getOrNull(mapping.companyColumn)?.trim() ?: ""
+        var message = cells.getOrNull(mapping.messageColumn)?.trim() ?: ""
+        var productRaw = cells.getOrNull(mapping.productColumn)?.trim() ?: ""
+
+        // Smart extraction: scan ALL fields for phone numbers and emails
+        val allCells = cells.toMutableList()
+        val extractedPhones = mutableListOf<String>()
+        val extractedEmails = mutableListOf<String>()
+
+        for (cellValue in allCells) {
+            if (cellValue.isBlank()) continue
+
+            // Extract phone numbers from any field
+            phoneRegex.findAll(cellValue).forEach { match ->
+                val found = match.value.trim()
+                if (found.length >= 10 && extractedPhones.none { it == found }) {
+                    extractedPhones.add(found)
+                }
+            }
+
+            // Extract emails from any field
+            emailRegex.findAll(cellValue).forEach { match ->
+                val found = match.value.trim()
+                if (extractedEmails.none { it == found }) {
+                    extractedEmails.add(found)
+                }
+            }
+        }
+
+        // If phone field is empty but we found phones elsewhere, use the first one
+        if (phone.isBlank() && extractedPhones.isNotEmpty()) {
+            phone = extractedPhones.first()
+        }
+
+        // If email field is empty but we found emails elsewhere, use the first one
+        if (email.isBlank() && extractedEmails.isNotEmpty()) {
+            email = extractedEmails.first()
+        }
+
+        // Clean city field: remove phone numbers and emails that leaked in
+        if (city.isNotBlank()) {
+            city = phoneRegex.replace(city, "").trim()
+            city = emailRegex.replace(city, "").trim()
+            city = city.replace(Regex("[,;]\\s*$"), "").trim()
+            city = city.replace(Regex("^\\s*[,;]\\s*"), "").trim()
+            if (city.isBlank() || city.length < 2) city = ""
+        }
+
+        // Clean name field: remove phone numbers that leaked in
+        if (name.isNotBlank()) {
+            val cleanedName = phoneRegex.replace(name, "").trim()
+            if (cleanedName.isNotBlank() && cleanedName.length >= 2) {
+                name = cleanedName
+            }
+        }
+
+        // If still no phone and there are extra extracted phones, assign remaining ones
+        if (phone.isBlank() && extractedPhones.size > 1) {
+            phone = extractedPhones[1]
+        }
 
         if (name.isBlank() && email.isBlank() && phone.isBlank()) {
             return null
         }
 
-        val productInterest = cells.getOrNull(mapping.productColumn)?.trim()?.let { product ->
-            if (product.isNotBlank()) listOf(product) else emptyList()
-        } ?: emptyList()
+        val productInterest = if (productRaw.isNotBlank()) {
+            productRaw.split(",", "/", "&").map { it.trim() }.filter { it.isNotBlank() }
+        } else {
+            emptyList()
+        }
 
         return Lead(
             id = UUID.randomUUID().toString(),
             name = name.ifBlank { "Unknown" },
             email = email,
             phone = phone,
-            company = cells.getOrNull(mapping.companyColumn)?.trim() ?: "",
+            company = company,
             productInterest = productInterest,
-            message = cells.getOrNull(mapping.messageColumn)?.trim() ?: "",
-            city = cells.getOrNull(mapping.cityColumn)?.trim() ?: "",
+            message = message,
+            city = city,
             source = "EXCEL"
         )
     }
@@ -239,7 +303,12 @@ object ExcelParser {
                 if (DateUtil.isCellDateFormatted(cell)) {
                     cell.dateCellValue.toString()
                 } else {
-                    cell.numericCellValue.toString()
+                    val num = cell.numericCellValue
+                    if (num == num.toLong().toDouble()) {
+                        num.toLong().toString()
+                    } else {
+                        num.toString()
+                    }
                 }
             }
             CellType.BOOLEAN -> cell.booleanCellValue.toString()
@@ -247,7 +316,12 @@ object ExcelParser {
                 cell.stringCellValue
             } catch (e: Exception) {
                 try {
-                    cell.numericCellValue.toString()
+                    val num = cell.numericCellValue
+                    if (num == num.toLong().toDouble()) {
+                        num.toLong().toString()
+                    } else {
+                        num.toString()
+                    }
                 } catch (e2: Exception) {
                     ""
                 }
