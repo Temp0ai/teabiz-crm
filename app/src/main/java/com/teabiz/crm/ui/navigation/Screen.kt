@@ -9,7 +9,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector,
     object Dashboard : Screen("dashboard", "Home", Icons.Outlined.Dashboard, Icons.Filled.Dashboard)
     object Leads : Screen("leads", "Leads", Icons.Outlined.People, Icons.Filled.People)
     object Import : Screen("import", "Import", Icons.Outlined.FileUpload, Icons.Filled.FileUpload)
-    object Campaigns : Screen("campaigns", "Campaigns", Icons.Outlined.Campaign, Icons.Filled.Campaign)
+    object Campaigns : Screen("campaigns", "WhatsApp", Icons.Outlined.Chat, Icons.Filled.Chat)
     object Marketing : Screen("marketing", "Marketing", Icons.Outlined.TrendingUp, Icons.Filled.TrendingUp)
     object Settings : Screen("settings", "Settings", Icons.Outlined.Settings, Icons.Filled.Settings)
 
@@ -40,7 +40,7 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Dashboard, "Home"),
     BottomNavItem(Screen.Leads, "Leads"),
     BottomNavItem(Screen.Import, "Import"),
-    BottomNavItem(Screen.Campaigns, "Campaigns"),
+    BottomNavItem(Screen.Campaigns, "WhatsApp"),
     BottomNavItem(Screen.Marketing, "Marketing"),
     BottomNavItem(Screen.Settings, "More")
 )

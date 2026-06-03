@@ -42,11 +42,11 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = "Campaigns",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold
-            )
+                Text(
+                    text = "WhatsApp",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold
+                )
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
                 containerColor = TeaGreen
