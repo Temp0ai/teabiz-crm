@@ -480,6 +480,7 @@ fun ActivityItem(activity: LeadActivity) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ScheduleFollowUpDialog(
     leadName: String,
@@ -516,7 +517,7 @@ fun ScheduleFollowUpDialog(
                         TimePickerDialog(context, { _, hour, minute ->
                             timePair = Pair(hour, minute)
                             selectedTime = String.format("%02d:%02d", hour, minute)
-                        }, timePair.first, timePair.minute, true).show()
+                        }, timePair.first, timePair.second, true).show()
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -536,6 +537,7 @@ fun ScheduleFollowUpDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddActivityDialog(
     onDismiss: () -> Unit,
@@ -586,15 +588,16 @@ fun AddActivityDialog(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuotationDialog(
     lead: Lead?,
     onDismiss: () -> Unit,
     onGenerate: (List<QuotationGenerator.QuotationItem>, String) -> Unit
 ) {
-    var items by remember { mutableStateOf(mutableListOf(
+    var itemList by remember { mutableStateOf(mutableListOf(
         QuotationGenerator.QuotationItem("Tea Premix (1 pack)", 1, 150.0),
-    )) }
+    ).toMutableList()) }
     var notes by remember { mutableStateOf("") }
     var showAddItem by remember { mutableStateOf(false) }
 
@@ -603,7 +606,7 @@ fun QuotationDialog(
         title = { Text("Create Quotation for ${lead?.name}") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items.forEachIndexed { index, item ->
+                itemList.forEachIndexed { index, item ->
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Row(
                             modifier = Modifier.padding(8.dp),
@@ -614,7 +617,7 @@ fun QuotationDialog(
                                 Text("Qty: ${item.quantity} x Rs.%.0f = Rs.%.0f".format(item.unitPrice, item.total), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                             }
                             IconButton(onClick = {
-                                items = items.toMutableList().apply { removeAt(index) }
+                                itemList = (itemList - item).toMutableList()
                             }) {
                                 Icon(Icons.Default.Close, contentDescription = "Remove", tint = Color.Red)
                             }
@@ -635,13 +638,13 @@ fun QuotationDialog(
                     label = { Text("Notes (optional)") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Text("Total: Rs.%.0f + 18%% GST".format(items.sumOf { it.total }), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TeaGreen)
+                Text("Total: Rs.%.0f + 18%% GST".format(itemList.sumOf { it.total }), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TeaGreen)
             }
         },
         confirmButton = {
             Button(
-                onClick = { onGenerate(items, notes) },
-                enabled = items.isNotEmpty()
+                onClick = { onGenerate(itemList, notes) },
+                enabled = itemList.isNotEmpty()
             ) { Text("Generate PDF") }
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
@@ -651,7 +654,7 @@ fun QuotationDialog(
         AddQuotationItemDialog(
             onDismiss = { showAddItem = false },
             onAdd = { name, qty, price ->
-                items = items.toMutableList() + QuotationGenerator.QuotationItem(name, qty, price)
+                itemList = (itemList + QuotationGenerator.QuotationItem(name, qty, price)).toMutableList()
                 showAddItem = false
             }
         )
