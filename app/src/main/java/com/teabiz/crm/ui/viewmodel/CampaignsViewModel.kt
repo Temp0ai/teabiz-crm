@@ -1,22 +1,23 @@
 package com.teabiz.crm.ui.viewmodel
 
-import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.teabiz.crm.data.model.*
 import com.teabiz.crm.data.remote.AiService
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.repository.LeadRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class CampaignsViewModel @Inject constructor(
-    private val application: Application,
+    @ApplicationContext private val context: Context,
     private val leadRepository: LeadRepository,
     private val whatsappService: WhatsAppService,
     private val aiService: AiService
@@ -182,34 +183,8 @@ class CampaignsViewModel @Inject constructor(
                 ))
 
                 _campaignState.value = CampaignState.Completed(sentCount, failedCount)
-
-                if (campaign.mediaUri.isNotBlank()) {
-                    sendMediaWithMessages(
-                        campaign.mediaUri,
-                        campaign.mediaType,
-                        filteredLeads.map { it.phone }.filter { it.isNotBlank() },
-                        campaign.messageTemplate
-                    )
-                }
             } catch (e: Exception) {
                 _campaignState.value = CampaignState.Error(e.message ?: "Campaign failed")
-            }
-        }
-    }
-
-    private fun sendMediaWithMessages(
-        mediaUri: String,
-        mediaType: String,
-        phones: List<String>,
-        caption: String
-    ) {
-        viewModelScope.launch {
-            try {
-                val uri = Uri.parse(mediaUri)
-                val takeFlags = Intent.FLAG_GRANT_READ_URI_PERMISSION
-                application.contentResolver.takePersistableUriPermission(uri, takeFlags)
-            } catch (e: Exception) {
-                // Permission might already be granted
             }
         }
     }
@@ -219,14 +194,14 @@ class CampaignsViewModel @Inject constructor(
             try {
                 val uri = Uri.parse(mediaUri)
                 val intent = Intent(Intent.ACTION_SEND).apply {
-                    type = if (mediaUri.contains("video") || mediaType.contains("video")) "video/*" else "image/*"
+                    type = if (mediaUri.contains("video") || _selectedMediaType.value.contains("video")) "video/*" else "image/*"
                     putExtra(Intent.EXTRA_STREAM, uri)
                     putExtra(Intent.EXTRA_TEXT, caption)
                     putExtra("jid", "$phone@s.whatsapp.net")
                     setPackage("com.whatsapp")
                     addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 }
-                application.startActivity(Intent.createChooser(intent, "Send via WhatsApp").apply {
+                context.startActivity(Intent.createChooser(intent, "Send via WhatsApp").apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 })
             } catch (e: Exception) {
@@ -235,7 +210,7 @@ class CampaignsViewModel @Inject constructor(
                     data = Uri.parse("https://wa.me/$cleanedPhone?text=${Uri.encode(caption)}")
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }
-                application.startActivity(intent)
+                context.startActivity(intent)
             }
         }
     }
