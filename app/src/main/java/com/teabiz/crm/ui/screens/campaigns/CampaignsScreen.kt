@@ -1,5 +1,9 @@
 package com.teabiz.crm.ui.screens.campaigns
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -10,8 +14,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberAsyncImagePainter
 import com.teabiz.crm.data.model.Campaign
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.CampaignsViewModel
@@ -130,7 +137,10 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
                     CampaignItem(
                         campaign = campaign,
                         onSend = { viewModel.sendCampaign(campaign.id) },
-                        onDelete = { viewModel.deleteCampaign(campaign) }
+                        onDelete = { viewModel.deleteCampaign(campaign) },
+                        onShareMedia = { phone, mediaUri, caption ->
+                            viewModel.shareMediaToWhatsApp(phone, mediaUri, caption)
+                        }
                     )
                 }
             }
@@ -139,9 +149,10 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
 
     if (showCreateDialog) {
         CreateCampaignDialog(
+            viewModel = viewModel,
             onDismiss = { showCreateDialog = false },
-            onCreate = { name, template, category ->
-                viewModel.createCampaign(name, template, category)
+            onCreate = { name, template, category, batchSize, mediaUri, mediaType ->
+                viewModel.createCampaign(name, template, category, batchSize, mediaUri, mediaType)
                 showCreateDialog = false
             }
         )
@@ -152,8 +163,11 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
 fun CampaignItem(
     campaign: Campaign,
     onSend: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onShareMedia: (String, String, String) -> Unit
 ) {
+    var showBatchInfo by remember { mutableStateOf(false) }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -179,11 +193,38 @@ fun CampaignItem(
                 }
             }
 
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.ViewModule, contentDescription = null, tint = CoffeeBrown, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Batch size: ${campaign.batchSize}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+
+            if (campaign.mediaUri.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Attachment, contentDescription = null, tint = TeaGreen, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Has ${campaign.mediaType} attached", style = MaterialTheme.typography.bodySmall, color = TeaGreen)
+                }
+            }
+
             Text(
                 text = campaign.messageTemplate.take(100) + if (campaign.messageTemplate.length > 100) "..." else "",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
+
+            if (campaign.status == "RUNNING" && campaign.totalBatches > 0) {
+                LinearProgressIndicator(
+                    progress = { campaign.currentBatch.toFloat() / campaign.totalBatches },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFF25D366)
+                )
+                Text(
+                    "Batch ${campaign.currentBatch}/${campaign.totalBatches} complete",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
 
             HorizontalDivider()
 
@@ -198,6 +239,10 @@ fun CampaignItem(
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(campaign.failedCount.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = StatusLost)
                     Text("Failed", style = MaterialTheme.typography.labelSmall)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(campaign.totalRecipients.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = CoffeeBrown)
+                    Text("Total", style = MaterialTheme.typography.labelSmall)
                 }
             }
 
@@ -237,50 +282,304 @@ fun CampaignStatusChip(status: String) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateCampaignDialog(
+    viewModel: CampaignsViewModel,
     onDismiss: () -> Unit,
-    onCreate: (String, String, String) -> Unit
+    onCreate: (String, String, String, Int, String, String) -> Unit
 ) {
+    val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var template by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("") }
+    var batchSize by remember { mutableIntStateOf(100) }
+    var showBatchDropdown by remember { mutableStateOf(false) }
+    val selectedMediaUri by viewModel.selectedMediaUri.collectAsState()
+    val selectedMediaType by viewModel.selectedMediaType.collectAsState()
+    val isGeneratingAiText by viewModel.isGeneratingAiText.collectAsState()
+
+    var aiTone by remember { mutableStateOf("Professional") }
+    var aiLanguage by remember { mutableStateOf("English") }
+    var showToneDropdown by remember { mutableStateOf(false) }
+    var showLanguageDropdown by remember { mutableStateOf(false) }
+
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            val mimeType = context.contentResolver.getType(it) ?: ""
+            val type = when {
+                mimeType.startsWith("video") -> "video"
+                mimeType.startsWith("image") -> "image"
+                else -> "image"
+            }
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    it,
+                    android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            viewModel.setSelectedMedia(it, type)
+        }
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Create Campaign") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Campaign Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = category,
-                    onValueChange = { category = it },
-                    label = { Text("Target Category (e.g., Tea Premix)") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                OutlinedTextField(
-                    value = template,
-                    onValueChange = { template = it },
-                    label = { Text("Message Template") },
-                    modifier = Modifier.fillMaxWidth(),
-                    minLines = 3
-                )
-                Text("Use {name}, {company}, {product} as placeholders", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                item {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        label = { Text("Campaign Name") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+
+                item {
+                    OutlinedTextField(
+                        value = category,
+                        onValueChange = { category = it },
+                        label = { Text("Target Category (e.g., Tea Premix)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
+                }
+
+                item {
+                    Box {
+                        ExposedDropdownMenuBox(
+                            expanded = showBatchDropdown,
+                            onExpandedChange = { showBatchDropdown = it }
+                        ) {
+                            OutlinedTextField(
+                                value = "$batchSize contacts per batch",
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Batch Size") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showBatchDropdown) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = showBatchDropdown,
+                                onDismissRequest = { showBatchDropdown = false }
+                            ) {
+                                listOf(25, 50, 75, 100, 150, 200).forEach { size ->
+                                    DropdownMenuItem(
+                                        text = { Text("$size contacts") },
+                                        onClick = {
+                                            batchSize = size
+                                            showBatchDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ExposedDropdownMenuBox(
+                                expanded = showToneDropdown,
+                                onExpandedChange = { showToneDropdown = it }
+                            ) {
+                                OutlinedTextField(
+                                    value = aiTone,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Tone") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showToneDropdown) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = showToneDropdown,
+                                    onDismissRequest = { showToneDropdown = false }
+                                ) {
+                                    listOf("Professional", "Friendly", "Casual", "Urgent", "Formal").forEach { tone ->
+                                        DropdownMenuItem(
+                                            text = { Text(tone) },
+                                            onClick = {
+                                                aiTone = tone
+                                                showToneDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        Box(modifier = Modifier.weight(1f)) {
+                            ExposedDropdownMenuBox(
+                                expanded = showLanguageDropdown,
+                                onExpandedChange = { showLanguageDropdown = it }
+                            ) {
+                                OutlinedTextField(
+                                    value = aiLanguage,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Language") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showLanguageDropdown) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = showLanguageDropdown,
+                                    onDismissRequest = { showLanguageDropdown = false }
+                                ) {
+                                    listOf("English", "Hindi", "Marathi").forEach { lang ->
+                                        DropdownMenuItem(
+                                            text = { Text(lang) },
+                                            onClick = {
+                                                aiLanguage = lang
+                                                showLanguageDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Button(
+                        onClick = {
+                            viewModel.generateAiMessage(
+                                campaignName = name,
+                                productCategory = category,
+                                tone = aiTone,
+                                language = aiLanguage,
+                                messageType = "promotional",
+                                onResult = { generated -> template = generated }
+                            )
+                        },
+                        enabled = !isGeneratingAiText && category.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C4DFF))
+                    ) {
+                        if (isGeneratingAiText) {
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Generating...")
+                        } else {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("AI Generate Message")
+                        }
+                    }
+                }
+
+                item {
+                    OutlinedTextField(
+                        value = template,
+                        onValueChange = { template = it },
+                        label = { Text("Message Template") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 4
+                    )
+                    Text(
+                        "Use {name}, {company}, {product} as placeholders",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
+
+                item {
+                    HorizontalDivider()
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Attach Media (Optional)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (selectedMediaUri != null) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = TeaGreen.copy(alpha = 0.1f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (selectedMediaType == "image") {
+                                    Image(
+                                        painter = rememberAsyncImagePainter(selectedMediaUri),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(60.dp),
+                                        contentScale = ContentScale.Crop
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.VideoFile,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(60.dp),
+                                        tint = TeaGreen
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("${selectedMediaType.uppercase()} Attached", fontWeight = FontWeight.Bold)
+                                    Text("Will be shared with each contact", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                }
+                                IconButton(onClick = { viewModel.clearSelectedMedia() }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Remove", tint = StatusLost)
+                                }
+                            }
+                        }
+                    } else {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            OutlinedButton(
+                                onClick = { imagePickerLauncher.launch("image/*") }
+                            ) {
+                                Icon(Icons.Default.Image, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Image")
+                            }
+                            OutlinedButton(
+                                onClick = { imagePickerLauncher.launch("video/*") }
+                            ) {
+                                Icon(Icons.Default.VideoFile, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Video")
+                            }
+                        }
+                    }
+                }
             }
         },
         confirmButton = {
             Button(
-                onClick = { onCreate(name, template, category) },
+                onClick = {
+                    onCreate(
+                        name,
+                        template,
+                        category,
+                        batchSize,
+                        selectedMediaUri?.toString() ?: "",
+                        selectedMediaType
+                    )
+                    viewModel.clearSelectedMedia()
+                },
                 enabled = name.isNotBlank() && template.isNotBlank()
             ) { Text("Create") }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = {
+                viewModel.clearSelectedMedia()
+                onDismiss()
+            }) { Text("Cancel") }
         }
     )
 }

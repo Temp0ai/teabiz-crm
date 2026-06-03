@@ -20,7 +20,13 @@ data class Campaign(
     val failedCount: Int = 0,
     val totalRecipients: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
-    val completedAt: Long? = null
+    val completedAt: Long? = null,
+    val batchSize: Int = 100,
+    val mediaUri: String = "",
+    val mediaType: String = "",
+    val currentBatch: Int = 0,
+    val totalBatches: Int = 0,
+    val currentBatchProgress: String = ""
 )
 
 enum class CampaignStatus(val displayName: String) {
