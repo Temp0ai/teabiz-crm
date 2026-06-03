@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.teabiz.crm.data.model.Lead
+import com.teabiz.crm.data.model.LeadSource
 import com.teabiz.crm.data.model.ProductCategory
 import com.teabiz.crm.data.model.ClientType
 import com.teabiz.crm.ui.theme.*
@@ -32,6 +33,27 @@ fun AddLeadScreen(
     var clientType by remember { mutableStateOf("") }
     var selectedProducts by remember { mutableStateOf(setOf<String>()) }
     var message by remember { mutableStateOf("") }
+    var source by remember { mutableStateOf("MANUAL") }
+    var showSourceDropdown by remember { mutableStateOf(false) }
+
+    val sourceOptions = listOf(
+        "MANUAL" to "Manual",
+        "INDIAMART" to "IndiaMART",
+        "JUSTDIAL" to "Just Dial",
+        "JSTDL" to "JSTDL",
+        "KAGGLE" to "Kaggle",
+        "GMB" to "Google My Business",
+        "WHATSAPP" to "WhatsApp",
+        "WEBSITE" to "Website",
+        "REFERRAL" to "Referral",
+        "PHONE" to "Phone Call",
+        "DEALER" to "Dealer",
+        "DISTRIBUTOR" to "Distributor",
+        "MACHINE" to "Machine",
+        "ORDER" to "Order",
+        "GMAIL" to "Gmail",
+        "EXCEL" to "Excel Import"
+    )
 
     Scaffold(
         topBar = {
@@ -99,6 +121,46 @@ fun AddLeadScreen(
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) }
                     )
+                }
+            }
+
+            // Source Dropdown
+            Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text("Lead Source", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Box {
+                        ExposedDropdownMenuBox(
+                            expanded = showSourceDropdown,
+                            onExpandedChange = { showSourceDropdown = it }
+                        ) {
+                            OutlinedTextField(
+                                value = sourceOptions.find { it.first == source }?.second ?: source,
+                                onValueChange = {},
+                                readOnly = true,
+                                label = { Text("Source") },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showSourceDropdown) },
+                                leadingIcon = { Icon(Icons.Default.Source, contentDescription = null) },
+                                modifier = Modifier.fillMaxWidth().menuAnchor()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = showSourceDropdown,
+                                onDismissRequest = { showSourceDropdown = false }
+                            ) {
+                                sourceOptions.forEach { (key, label) ->
+                                    DropdownMenuItem(
+                                        text = { Text(label) },
+                                        onClick = {
+                                            source = key
+                                            showSourceDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -175,7 +237,7 @@ fun AddLeadScreen(
                             clientType = clientType,
                             productInterest = selectedProducts.toList(),
                             message = message,
-                            source = "MANUAL"
+                            source = source
                         )
                         viewModel.addLead(lead)
                         onBack()

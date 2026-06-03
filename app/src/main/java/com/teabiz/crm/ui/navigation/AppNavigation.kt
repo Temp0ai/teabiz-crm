@@ -64,7 +64,8 @@ fun AppNavigation(
         route.startsWith("competitor") ||
         route.startsWith("content_calendar") ||
         route.startsWith("gmb") ||
-        route.startsWith("hashtag_generator")
+        route.startsWith("hashtag_generator") ||
+        route.startsWith("product_catalog")
     } ?: false
 
     Scaffold(
@@ -149,7 +150,8 @@ fun AppNavigation(
                     onNavigateToCompetitors = { navController.navigate(Screen.CompetitorAnalysis.route) },
                     onNavigateToContent = { navController.navigate(Screen.ContentCalendar.route) },
                     onNavigateToGmb = { navController.navigate(Screen.GmbManagement.route) },
-                    onNavigateToHashtags = { navController.navigate(Screen.HashtagGenerator.route) }
+                    onNavigateToHashtags = { navController.navigate(Screen.HashtagGenerator.route) },
+                    onNavigateToProductCatalog = { navController.navigate("product_catalog") }
                 )
             }
 
@@ -243,6 +245,12 @@ fun AppNavigation(
                 val whatsappCatalogViewModel: com.teabiz.crm.ui.viewmodel.WhatsAppCatalogViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                 WhatsAppCatalogScreen(
                     viewModel = whatsappCatalogViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("product_catalog") {
+                com.teabiz.crm.ui.screens.marketing.ProductCatalogScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

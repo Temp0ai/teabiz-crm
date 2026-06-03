@@ -21,6 +21,9 @@ interface FollowUpDao {
     @Query("SELECT * FROM follow_ups WHERE leadId = :leadId AND status != 'FAILED' ORDER BY createdAt DESC LIMIT 1")
     suspend fun getLastSuccessfulFollowUp(leadId: String): FollowUp?
 
+    @Query("SELECT * FROM follow_ups WHERE scheduledAt IS NOT NULL AND scheduledAt > :currentTime AND status = 'PENDING' ORDER BY scheduledAt ASC")
+    fun getScheduledFollowUps(currentTime: Long): Flow<List<FollowUp>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFollowUp(followUp: FollowUp): Long
 

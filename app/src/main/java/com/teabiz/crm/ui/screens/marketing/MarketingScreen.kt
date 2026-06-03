@@ -24,7 +24,8 @@ fun MarketingScreen(
     onNavigateToCompetitors: () -> Unit,
     onNavigateToContent: () -> Unit,
     onNavigateToGmb: () -> Unit,
-    onNavigateToHashtags: () -> Unit = {}
+    onNavigateToHashtags: () -> Unit = {},
+    onNavigateToProductCatalog: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -83,6 +84,14 @@ fun MarketingScreen(
             icon = Icons.Default.Tag,
             color = Color(0xFFE1306C),
             onClick = onNavigateToHashtags
+        )
+
+        MarketingCard(
+            title = "Product Catalog",
+            description = "Browse our tea & coffee products. Share catalog with customers via WhatsApp.",
+            icon = Icons.Default.Inventory2,
+            color = CoffeeBrown,
+            onClick = onNavigateToProductCatalog
         )
 
         Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {

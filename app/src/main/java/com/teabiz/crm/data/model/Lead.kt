@@ -26,7 +26,24 @@ data class Lead(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis(),
     val lastFollowUpAt: Long? = null,
-    val whatsappOptIn: Boolean = true
+    val whatsappOptIn: Boolean = true,
+    val leadScore: Int = 0,
+    val priority: String = "NORMAL",
+    val nextFollowUpAt: Long? = null,
+    val dealValue: Double = 0.0,
+    val assignedTo: String = ""
+)
+
+@Entity(tableName = "lead_activities")
+@TypeConverters(Converters::class)
+data class LeadActivity(
+    @PrimaryKey
+    val id: String = java.util.UUID.randomUUID().toString(),
+    val leadId: String,
+    val type: String,
+    val description: String,
+    val timestamp: Long = System.currentTimeMillis(),
+    val outcome: String = ""
 )
 
 enum class LeadSource(val displayName: String) {
@@ -37,7 +54,15 @@ enum class LeadSource(val displayName: String) {
     EXCEL("Excel Import"),
     WEBSITE("Website"),
     REFERRAL("Referral"),
-    PHONE("Phone Call")
+    PHONE("Phone Call"),
+    INDIAMART("IndiaMART"),
+    KAGGLE("Kaggle"),
+    JSTDL("JSTDL"),
+    JUSTDIAL("Just Dial"),
+    DEALER("Dealer"),
+    DISTRIBUTOR("Distributor"),
+    MACHINE("Machine"),
+    ORDER("Order")
 }
 
 enum class LeadStatus(val displayName: String) {
@@ -78,4 +103,11 @@ enum class GeographicScope(val displayName: String) {
     LOCAL("Local"),
     NATIONAL("National"),
     INTERNATIONAL("International")
+}
+
+enum class LeadPriority(val displayName: String) {
+    HOT("Hot"),
+    WARM("Warm"),
+    NORMAL("Normal"),
+    COLD("Cold")
 }

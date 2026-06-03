@@ -96,6 +96,18 @@ fun LeadsScreen(
             CategoryChip("Coffee Machine", selectedCategory, viewModel)
         }
 
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            PriorityFilterChip("HOT", "🔥 Hot", viewModel)
+            PriorityFilterChip("WARM", "☀ Warm", viewModel)
+            PriorityFilterChip("NORMAL", "Normal", viewModel)
+            PriorityFilterChip("COLD", "❄ Cold", viewModel)
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         if (leads.isEmpty()) {
@@ -181,6 +193,62 @@ fun CategoryChip(category: String, selectedCategory: String, viewModel: LeadsVie
 }
 
 @Composable
+fun PriorityFilterChip(value: String, label: String, viewModel: LeadsViewModel) {
+    val selectedPriority by viewModel.selectedPriority.collectAsState()
+    val isSelected = value == selectedPriority
+    val color = when (value) {
+        "HOT" -> Color(0xFFFF5722)
+        "WARM" -> PremixGold
+        "COLD" -> Color(0xFF2196F3)
+        else -> Color.Gray
+    }
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = if (isSelected) color else color.copy(alpha = 0.15f),
+        modifier = Modifier.clickable { viewModel.updatePriority(value) }
+    ) {
+        Text(
+            text = label,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (isSelected) Color.White else color
+        )
+    }
+}
+
+@Composable
+fun PriorityBadgeSmall(priority: String) {
+    val color = when (priority) {
+        "HOT" -> Color(0xFFFF5722)
+        "WARM" -> PremixGold
+        "COLD" -> Color(0xFF2196F3)
+        else -> Color.Gray
+    }
+    Surface(shape = MaterialTheme.shapes.extraSmall, color = color.copy(alpha = 0.2f)) {
+        Text(
+            text = priority,
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun ScoreBadge(score: Int) {
+    Surface(shape = MaterialTheme.shapes.extraSmall, color = TeaGreen.copy(alpha = 0.15f)) {
+        Text(
+            text = "$score",
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+            style = MaterialTheme.typography.labelSmall,
+            color = TeaGreen,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
 fun LeadItem(lead: Lead, onClick: () -> Unit, onWhatsApp: () -> Unit = {}, onCall: () -> Unit = {}) {
     Card(
         modifier = Modifier
@@ -202,11 +270,17 @@ fun LeadItem(lead: Lead, onClick: () -> Unit, onWhatsApp: () -> Unit = {}, onCal
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = lead.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = lead.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1f)
+                    )
+                    PriorityBadgeSmall(priority = lead.priority)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    ScoreBadge(score = lead.leadScore)
+                }
                 if (lead.company.isNotBlank()) {
                     Text(
                         text = lead.company,

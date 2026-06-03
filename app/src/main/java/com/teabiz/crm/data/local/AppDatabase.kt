@@ -10,6 +10,7 @@ import com.teabiz.crm.data.model.*
 @Database(
     entities = [
         Lead::class,
+        LeadActivity::class,
         FollowUp::class,
         ImportSession::class,
         Campaign::class,
@@ -20,13 +21,14 @@ import com.teabiz.crm.data.model.*
         SavedFilter::class,
         AppSetting::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun leadDao(): LeadDao
+    abstract fun leadActivityDao(): LeadActivityDao
     abstract fun followUpDao(): FollowUpDao
     abstract fun importSessionDao(): ImportSessionDao
     abstract fun campaignDao(): CampaignDao

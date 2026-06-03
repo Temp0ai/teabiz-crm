@@ -2,6 +2,7 @@ package com.teabiz.crm.data.local
 
 import androidx.room.*
 import com.teabiz.crm.data.model.Lead
+import com.teabiz.crm.data.model.LeadActivity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -39,6 +40,18 @@ interface LeadDao {
     @Query("SELECT * FROM leads WHERE whatsappOptIn = 1 AND status != 'LOST'")
     fun getWhatsAppOptInLeads(): Flow<List<Lead>>
 
+    @Query("SELECT * FROM leads WHERE priority = :priority ORDER BY leadScore DESC")
+    fun getLeadsByPriority(priority: String): Flow<List<Lead>>
+
+    @Query("SELECT * FROM leads WHERE nextFollowUpAt IS NOT NULL AND nextFollowUpAt <= :currentTime ORDER BY nextFollowUpAt ASC")
+    fun getLeadsDueForFollowUp(currentTime: Long): Flow<List<Lead>>
+
+    @Query("SELECT * FROM leads ORDER BY leadScore DESC")
+    fun getLeadsByScore(): Flow<List<Lead>>
+
+    @Query("SELECT * FROM leads WHERE source = :source")
+    suspend fun getLeadsBySourceList(source: String): List<Lead>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLead(lead: Lead): Long
 
@@ -65,4 +78,19 @@ interface LeadDao {
 
     @Query("SELECT * FROM leads ORDER BY createdAt DESC LIMIT :limit")
     fun getRecentLeads(limit: Int): Flow<List<Lead>>
+}
+
+@Dao
+interface LeadActivityDao {
+    @Query("SELECT * FROM lead_activities WHERE leadId = :leadId ORDER BY timestamp DESC")
+    fun getActivitiesForLead(leadId: String): Flow<List<LeadActivity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertActivity(activity: LeadActivity)
+
+    @Delete
+    suspend fun deleteActivity(activity: LeadActivity)
+
+    @Query("DELETE FROM lead_activities WHERE leadId = :leadId")
+    suspend fun deleteAllActivitiesForLead(leadId: String)
 }
