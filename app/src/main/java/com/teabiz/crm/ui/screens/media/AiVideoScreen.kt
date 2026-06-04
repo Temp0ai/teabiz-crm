@@ -237,7 +237,7 @@ private fun VideoScriptTab(
                             },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.EditVideo, contentDescription = null)
+                            Icon(Icons.Default.VideoCameraFront, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Clipchamp")
                         }
