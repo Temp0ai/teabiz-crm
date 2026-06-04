@@ -16,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.teabiz.crm.ui.viewmodel.AiMediaViewModel
+import com.teabiz.crm.util.WhatsAppUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -97,6 +99,8 @@ private fun ImageAnalysisTab(
     analysis: com.teabiz.crm.data.remote.AiMediaGenerator.ImageAnalysis?,
     imagePickerLauncher: androidx.activity.result.ActivityResultLauncher<String>
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -118,27 +122,25 @@ private fun ImageAnalysisTab(
         analysis?.let { result ->
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Description", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(result.description)
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Objects Detected", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(result.objects.joinToString(", "))
+                    SectionWithCopy("Description", result.description, context)
+                    SectionWithCopy("Objects Detected", result.objects.joinToString(", "), context)
+                    SectionWithCopy("Mood", result.mood, context)
+                    SectionWithCopy("Suggested Caption", result.caption, context)
+                    SectionWithCopy("Hashtags", result.hashtags.joinToString(" "), context)
 
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Mood", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(result.mood)
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Suggested Caption", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(result.caption)
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Hashtags", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(result.hashtags.joinToString(" "))
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Marketing Suggestions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Marketing Suggestions", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        IconButton(onClick = {
+                            WhatsAppUtils.copyToClipboard(context, "Suggestions", result.suggestions.joinToString("\n"))
+                        }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFF7C4DFF))
+                        }
+                    }
                     result.suggestions.forEach { suggestion ->
                         Text("• $suggestion")
                     }
@@ -153,6 +155,7 @@ private fun VideoIdeaTab(
     concept: com.teabiz.crm.data.remote.AiMediaGenerator.VideoConcept?,
     onGenerate: (String, String, String, String) -> Unit
 ) {
+    val context = LocalContext.current
     var product by remember { mutableStateOf("Tea Premix") }
     var platform by remember { mutableStateOf("Instagram Reels") }
     var duration by remember { mutableStateOf("30 seconds") }
@@ -197,25 +200,47 @@ private fun VideoIdeaTab(
             Spacer(modifier = Modifier.height(16.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(c.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(c.description)
-                    
+                    SectionWithCopy("Title", c.title, context)
+                    SectionWithCopy("Description", c.description, context)
+
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Script", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Script", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        IconButton(onClick = {
+                            WhatsAppUtils.copyToClipboard(context, "Script", c.script.mapIndexed { i, s -> "${i+1}. $s" }.joinToString("\n"))
+                        }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFF7C4DFF))
+                        }
+                    }
                     c.script.forEachIndexed { index, scene ->
                         Text("${index + 1}. $scene")
                     }
                     
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Visual Cues", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Visual Cues", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        IconButton(onClick = {
+                            WhatsAppUtils.copyToClipboard(context, "Visual Cues", c.visualCues.joinToString("\n"))
+                        }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFF7C4DFF))
+                        }
+                    }
                     c.visualCues.forEach { cue ->
                         Text("• $cue")
                     }
                     
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("Music: ${c.musicSuggestion}")
-                    Text("Captions: ${c.captions}")
-                    Text("Hashtags: ${c.hashtags.joinToString(" ")}")
+                    SectionWithCopy("Music", c.musicSuggestion, context)
+                    SectionWithCopy("Captions", c.captions, context)
+                    SectionWithCopy("Hashtags", c.hashtags.joinToString(" "), context)
                 }
             }
         }
@@ -227,6 +252,7 @@ private fun SocialPostTab(
     post: com.teabiz.crm.data.remote.AiMediaGenerator.GeneratedContent?,
     onGenerate: (String, String, String) -> Unit
 ) {
+    val context = LocalContext.current
     var product by remember { mutableStateOf("Tea Premix") }
     var platform by remember { mutableStateOf("Instagram") }
     var occasion by remember { mutableStateOf("General") }
@@ -267,7 +293,18 @@ private fun SocialPostTab(
             Spacer(modifier = Modifier.height(16.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Generated Post", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Generated Post", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        IconButton(onClick = {
+                            WhatsAppUtils.copyToClipboard(context, "Post", p.content)
+                        }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFF7C4DFF))
+                        }
+                    }
                     Text(p.content)
                 }
             }
@@ -280,6 +317,7 @@ private fun DescriptionTab(
     description: String,
     onGenerate: (String) -> Unit
 ) {
+    val context = LocalContext.current
     var product by remember { mutableStateOf("Tea Premix") }
 
     val products = listOf("Tea Premix", "Coffee Premix", "Tea Vending Machine", "Coffee Vending Machine", "Tea Powder", "Coffee Powder")
@@ -312,12 +350,41 @@ private fun DescriptionTab(
             Spacer(modifier = Modifier.height(16.dp))
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Generated Description", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Generated Description", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        IconButton(onClick = {
+                            WhatsAppUtils.copyToClipboard(context, "Description", description)
+                        }) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFF7C4DFF))
+                        }
+                    }
                     Text(description)
                 }
             }
         }
     }
+}
+
+@Composable
+private fun SectionWithCopy(title: String, content: String, context: android.content.Context) {
+    Spacer(modifier = Modifier.height(12.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        IconButton(onClick = {
+            WhatsAppUtils.copyToClipboard(context, title, content)
+        }) {
+            Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFF7C4DFF))
+        }
+    }
+    Text(content)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
