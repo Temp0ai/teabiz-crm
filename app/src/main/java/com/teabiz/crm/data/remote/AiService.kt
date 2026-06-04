@@ -285,6 +285,36 @@ class AiService @Inject constructor(
         val productHint = Regex("who (?:inquired about|showed interest in|recent purchase of|about our) (.+?)(?:\\.|\\n)").find(prompt)?.groupValues?.get(1) ?: "our products"
 
         return when {
+            prompt.contains("competitor", ignoreCase = true) && prompt.contains("analyze", ignoreCase = true) ->
+                """
+                **Competitor Analysis**
+
+                **Strengths:**
+                • Established brand presence in the market
+                • Wide distribution network
+                • Strong online visibility and social media presence
+                • Competitive pricing strategy
+
+                **Weaknesses:**
+                • Limited product customization options
+                • Slower response to market trends
+                • Customer service could be improved
+
+                **Market Positioning:**
+                • Mid-range pricing targeting small to medium businesses
+                • Focused on bulk B2B sales
+                • Strong in local/regional markets
+
+                **Opportunities to Differentiate:**
+                • Offer personalized product blends and flavors
+                • Provide better after-sales support and training
+                • Launch loyalty programs for repeat customers
+                • Use AI-powered customer engagement tools
+                • Focus on organic/sustainable product lines
+
+                **Recommendation:** Focus on superior customer service and product quality to stand out.
+                """.trimIndent()
+
             prompt.contains("follow-up", ignoreCase = true) || prompt.contains("inquiry", ignoreCase = true) ->
                 when (lang) {
                     "hi" -> "नमस्ते! $productHint में आपकी रुचि के लिए धन्यवाद। हम आपके व्यवसाय के लिए हमारे प्रीमियम उत्पादों के लाभों पर चर्चा करना चाहेंगे। कृपया हमें एक सुविधाजनक समय बताएं, या कोई भी प्रश्न पूछें। आपसे सुनने की प्रतीक्षा रहेगी!"

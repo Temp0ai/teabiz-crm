@@ -76,18 +76,34 @@ class MarketingViewModel @Inject constructor(
             try {
                 val response = aiService.analyzeCompetitor(name, website)
                 val content = response.content
-                val strengths = content.lines().filter { it.contains("strength", ignoreCase = true) }.map { it.trim().removePrefix("- ").removePrefix("* ") }
-                val weaknesses = content.lines().filter { it.contains("weakness", ignoreCase = true) }.map { it.trim().removePrefix("- ").removePrefix("* ") }
-                val opportunities = content.lines().filter { it.contains("opportunit", ignoreCase = true) }.map { it.trim().removePrefix("- ").removePrefix("* ") }
+
+                val sections = content.split("**").filter { it.isNotBlank() }
+                val sectionMap = mutableMapOf<String, List<String>>()
+                var currentKey = ""
+                for (section in sections) {
+                    val trimmed = section.trim()
+                    if (trimmed.endsWith(":") || trimmed.endsWith(" ")) {
+                        currentKey = trimmed.removeSuffix(":").removeSuffix(" ").lowercase()
+                    } else if (currentKey.isNotEmpty()) {
+                        val items = trimmed.lines().map { it.trim().removePrefix("- ").removePrefix("* ").removePrefix("• ") }.filter { it.isNotBlank() }
+                        sectionMap[currentKey] = items
+                        currentKey = ""
+                    }
+                }
+
+                val strengths = sectionMap.entries.find { it.key.contains("strength") }?.value ?: listOf("See AI analysis below")
+                val weaknesses = sectionMap.entries.find { it.key.contains("weakness") }?.value ?: emptyList()
+                val opportunities = sectionMap.entries.find { it.key.contains("opportunit") }?.value ?: emptyList()
+                val positioning = sectionMap.entries.find { it.key.contains("position") }?.value ?: emptyList()
 
                 val analysis = CompetitorAnalysisResult(
                     competitorName = name,
                     website = website,
                     estimatedTraffic = 0,
                     topKeywords = emptyList(),
-                    strengths = strengths.ifEmpty { listOf("See AI analysis") },
+                    strengths = strengths,
                     weaknesses = weaknesses,
-                    opportunities = opportunities
+                    opportunities = opportunities + positioning
                 )
                 _competitorAnalysis.value = analysis
 
@@ -165,6 +181,10 @@ class MarketingViewModel @Inject constructor(
         viewModelScope.launch {
             marketingRepository.deleteContent(content)
         }
+    }
+
+    fun clearAnalysis() {
+        _competitorAnalysis.value = null
     }
 
     fun deleteKeyword(keyword: SeoKeyword) {
