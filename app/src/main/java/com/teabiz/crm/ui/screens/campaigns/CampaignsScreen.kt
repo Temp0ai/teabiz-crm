@@ -28,7 +28,7 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CampaignsScreen(viewModel: CampaignsViewModel, onNavigateToBot: () -> Unit = {}) {
+fun CampaignsScreen(viewModel: CampaignsViewModel) {
     var showCreateDialog by remember { mutableStateOf(false) }
     val campaigns by viewModel.campaigns.collectAsState()
     val campaignState by viewModel.campaignState.collectAsState()
@@ -59,21 +59,11 @@ fun CampaignsScreen(viewModel: CampaignsViewModel, onNavigateToBot: () -> Unit =
                         fontWeight = FontWeight.Bold
                     )
                 }
-            Row {
-                IconButton(onClick = onNavigateToBot) {
-                    Icon(
-                        Icons.Default.SmartToy,
-                        contentDescription = "Bot",
-                        tint = Color(0xFF25D366),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-                FloatingActionButton(
-                    onClick = { showCreateDialog = true },
-                    containerColor = TeaGreen
-                ) {
-                    Icon(Icons.Default.Add, contentDescription = "Create Campaign")
-                }
+            FloatingActionButton(
+                onClick = { showCreateDialog = true },
+                containerColor = TeaGreen
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Create Campaign")
             }
         }
 
