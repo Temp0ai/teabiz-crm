@@ -88,21 +88,53 @@ fun CompetitorScreen(
             }
 
             if (analysis != null) {
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                        colors = CardDefaults.cardColors(containerColor = CoffeeBrown.copy(alpha = 0.05f))
+                val a = analysis!!
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = CoffeeBrown.copy(alpha = 0.05f))
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Analytics, contentDescription = null, tint = CoffeeBrown, modifier = Modifier.size(24.dp))
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Analysis: ${analysis.competitorName}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = CoffeeBrown)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Analytics, contentDescription = null, tint = CoffeeBrown, modifier = Modifier.size(24.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Analysis: ${a.competitorName}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = CoffeeBrown)
+                        }
+
+                        if (a.strengths.isNotEmpty()) {
+                            Column {
+                                Text("Strengths", style = MaterialTheme.typography.labelLarge, color = StatusConverted, fontWeight = FontWeight.Bold)
+                                a.strengths.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
                             }
+                        }
+
+                        if (a.weaknesses.isNotEmpty()) {
+                            Column {
+                                Text("Weaknesses", style = MaterialTheme.typography.labelLarge, color = StatusLost, fontWeight = FontWeight.Bold)
+                                a.weaknesses.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                            }
+                        }
+
+                        if (a.opportunities.isNotEmpty()) {
+                            Column {
+                                Text("Opportunities", style = MaterialTheme.typography.labelLarge, color = TeaGreen, fontWeight = FontWeight.Bold)
+                                a.opportunities.forEach { Text("• $it", style = MaterialTheme.typography.bodySmall) }
+                            }
+                        }
+
+                        Button(
+                            onClick = { viewModel.clearAnalysis() },
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(containerColor = CoffeeBrown)
+                        ) {
+                            Text("Clear Analysis")
+                        }
+                    }
+                }
+            }
 
                             if (analysis.strengths.isNotEmpty()) {
                                 Column {
