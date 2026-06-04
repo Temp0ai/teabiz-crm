@@ -70,6 +70,11 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
         Spacer(modifier = Modifier.height(16.dp))
 
         if (campaignState is CampaignsViewModel.CampaignState.Sending) {
+            val isPaused by viewModel.isPaused.collectAsState()
+            val sentList by viewModel.sentContacts.collectAsState()
+            val remainingList by viewModel.remainingContacts.collectAsState()
+            var showContactDetails by remember { mutableStateOf(false) }
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF25D366).copy(alpha = 0.1f)),
@@ -80,15 +85,21 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xFF25D366))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Sending WhatsApp messages...", fontWeight = FontWeight.Bold)
+                        if (isPaused) {
+                            Icon(Icons.Default.Pause, contentDescription = null, tint = Color(0xFFFF9800), modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Campaign Paused", fontWeight = FontWeight.Bold, color = Color(0xFFFF9800))
+                        } else {
+                            CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color(0xFF25D366))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Sending WhatsApp messages...", fontWeight = FontWeight.Bold)
+                        }
                     }
                     if (sendProgress.second > 0) {
                         LinearProgressIndicator(
                             progress = { sendProgress.first.toFloat() / sendProgress.second },
                             modifier = Modifier.fillMaxWidth(),
-                            color = Color(0xFF25D366)
+                            color = if (isPaused) Color(0xFFFF9800) else Color(0xFF25D366)
                         )
                         Text(
                             "${sendProgress.first} / ${sendProgress.second} messages sent",
@@ -96,12 +107,102 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
                             color = Color.Gray
                         )
                     }
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (isPaused) {
+                            Button(
+                                onClick = { viewModel.resumeCampaign() },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
+                            ) {
+                                Icon(Icons.Default.PlayArrow, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Resume")
+                            }
+                        } else {
+                            Button(
+                                onClick = { viewModel.pauseCampaign() },
+                                modifier = Modifier.weight(1f),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                            ) {
+                                Icon(Icons.Default.Pause, contentDescription = null)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("Pause")
+                            }
+                        }
+                        Button(
+                            onClick = { viewModel.stopCampaign() },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = StatusLost)
+                        ) {
+                            Icon(Icons.Default.Stop, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Stop")
+                        }
+                    }
+
+                    TextButton(onClick = { showContactDetails = !showContactDetails }) {
+                        Text(
+                            if (showContactDetails) "Hide Details" else "View Sent & Remaining",
+                            color = Color(0xFF25D366)
+                        )
+                        Icon(
+                            if (showContactDetails) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = null,
+                            tint = Color(0xFF25D366)
+                        )
+                    }
+
+                    if (showContactDetails) {
+                        if (sentList.isNotEmpty()) {
+                            Surface(shape = MaterialTheme.shapes.small, color = TeaGreen.copy(alpha = 0.1f)) {
+                                Column(modifier = Modifier.padding(8.dp)) {
+                                    Text("Sent (${sentList.size})", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = TeaGreen)
+                                    sentList.takeLast(5).forEach { Text("✓ $it", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    if (sentList.size > 5) Text("...and ${sentList.size - 5} more", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                }
+                            }
+                        }
+                        if (remainingList.isNotEmpty()) {
+                            Surface(shape = MaterialTheme.shapes.small, color = Color(0xFFFF9800).copy(alpha = 0.1f)) {
+                                Column(modifier = Modifier.padding(8.dp)) {
+                                    Text("Remaining (${remainingList.size})", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color(0xFFFF9800))
+                                    remainingList.take(5).forEach { Text("○ $it", style = MaterialTheme.typography.bodySmall, color = Color.Gray) }
+                                    if (remainingList.size > 5) Text("...and ${remainingList.size - 5} more", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                }
+                            }
+                        }
+                    }
+
                     if (sendStatus.isNotBlank()) {
                         Text(sendStatus, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                     }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        if (campaignState is CampaignsViewModel.CampaignState.Paused) {
+            val paused = campaignState as CampaignsViewModel.CampaignState.Paused
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFF9800).copy(alpha = 0.1f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.PauseCircle, contentDescription = null, tint = Color(0xFFFF9800))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Campaign paused! ${paused.sent} sent, ${paused.failed} failed, ${paused.remaining} remaining", fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            LaunchedEffect(Unit) { viewModel.resetState() }
         }
 
         if (campaignState is CampaignsViewModel.CampaignState.Completed) {

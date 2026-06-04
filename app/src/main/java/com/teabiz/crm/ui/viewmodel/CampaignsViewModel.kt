@@ -79,6 +79,36 @@ class CampaignsViewModel @Inject constructor(
     private val _isGeneratingAiText = MutableStateFlow(false)
     val isGeneratingAiText: StateFlow<Boolean> = _isGeneratingAiText
 
+    private val _isPaused = MutableStateFlow(false)
+    val isPaused: StateFlow<Boolean> = _isPaused
+
+    private val _isStopped = MutableStateFlow(false)
+
+    private val _sentContacts = MutableStateFlow<List<String>>(emptyList())
+    val sentContacts: StateFlow<List<String>> = _sentContacts
+
+    private val _remainingContacts = MutableStateFlow<List<String>>(emptyList())
+    val remainingContacts: StateFlow<List<String>> = _remainingContacts
+
+    private val _activeCampaignId = MutableStateFlow<String?>(null)
+    val activeCampaignId: StateFlow<String?> = _activeCampaignId
+
+    fun pauseCampaign() {
+        _isPaused.value = true
+        _sendStatus.value = "Campaign paused"
+    }
+
+    fun resumeCampaign() {
+        _isPaused.value = false
+        _sendStatus.value = "Campaign resumed"
+    }
+
+    fun stopCampaign() {
+        _isStopped.value = true
+        _isPaused.value = false
+        _sendStatus.value = "Campaign stopped"
+    }
+
     fun createCampaign(
         name: String,
         template: String,
@@ -147,6 +177,11 @@ class CampaignsViewModel @Inject constructor(
     fun sendCampaign(campaignId: String) {
         viewModelScope.launch {
             _campaignState.value = CampaignState.Sending
+            _isStopped.value = false
+            _isPaused.value = false
+            _activeCampaignId.value = campaignId
+            _sentContacts.value = emptyList()
+            _remainingContacts.value = emptyList()
             try {
                 val campaign = leadRepository.getCampaignById(campaignId) ?: return@launch
                 val leads = leadRepository.getWhatsAppOptInLeads().first()
@@ -167,26 +202,50 @@ class CampaignsViewModel @Inject constructor(
                 val total = filteredLeads.size
                 _sendProgress.value = Pair(0, total)
                 _sendStatus.value = "Preparing to send to $total contacts..."
+                _remainingContacts.value = filteredLeads.map { "${it.name} (${it.phone})" }
 
                 leadRepository.updateCampaign(campaign.copy(
                     status = "RUNNING",
                     totalRecipients = total,
-                    totalBatches = 1
+                    totalBatches = 1,
+                    remainingContacts = filteredLeads.joinToString("\n") { "${it.name} - ${it.phone}" }
                 ))
 
                 var sentCount = 0
                 var failedCount = 0
+                val sentList = mutableListOf<String>()
+                val remainingList = filteredLeads.map { "${it.name} (${it.phone})" }.toMutableList()
 
                 for ((index, lead) in filteredLeads.withIndex()) {
+                    while (_isPaused.value) {
+                        kotlinx.coroutines.delay(500L)
+                    }
+
+                    if (_isStopped.value) {
+                        leadRepository.updateCampaign(campaign.copy(
+                            status = "PAUSED",
+                            sentCount = sentCount,
+                            failedCount = failedCount,
+                            totalRecipients = total,
+                            sentContacts = sentList.joinToString("\n"),
+                            remainingContacts = remainingList.joinToString("\n")
+                        ))
+                        _campaignState.value = CampaignState.Paused(sentCount, failedCount, remainingList.size)
+                        _activeCampaignId.value = null
+                        return@launch
+                    }
+
                     val personalizedMessage = campaign.messageTemplate
                         .replace("{name}", lead.name)
                         .replace("{company}", lead.company)
                         .replace("{product}", lead.productInterest.joinToString(", "))
 
                     val cleanPhone = lead.phone.replace(Regex("[^0-9]"), "")
+                    val contactInfo = "${lead.name} (${lead.phone})"
                     if (cleanPhone.length < 10) {
                         failedCount++
                         _sendProgress.value = Pair(index + 1, total)
+                        remainingList.remove(contactInfo)
                         continue
                     }
 
@@ -197,6 +256,10 @@ class CampaignsViewModel @Inject constructor(
                         context.startActivity(intent)
 
                         sentCount++
+                        sentList.add(contactInfo)
+                        remainingList.remove(contactInfo)
+                        _sentContacts.value = sentList.toList()
+                        _remainingContacts.value = remainingList.toList()
                         _sendProgress.value = Pair(index + 1, total)
                         _sendStatus.value = "Opened WhatsApp for ${lead.name} (${index + 1}/$total)"
 
@@ -214,12 +277,16 @@ class CampaignsViewModel @Inject constructor(
                     totalRecipients = total,
                     completedAt = System.currentTimeMillis(),
                     currentBatch = 1,
-                    currentBatchProgress = "Complete"
+                    currentBatchProgress = "Complete",
+                    sentContacts = sentList.joinToString("\n"),
+                    remainingContacts = ""
                 ))
 
+                _activeCampaignId.value = null
                 _campaignState.value = CampaignState.Completed(sentCount, failedCount)
             } catch (e: Exception) {
                 _campaignState.value = CampaignState.Error(e.message ?: "Campaign failed")
+                _activeCampaignId.value = null
             }
         }
     }
@@ -260,12 +327,18 @@ class CampaignsViewModel @Inject constructor(
         _campaignState.value = CampaignState.Idle
         _sendStatus.value = ""
         _sendProgress.value = Pair(0, 0)
+        _isPaused.value = false
+        _isStopped.value = false
+        _sentContacts.value = emptyList()
+        _remainingContacts.value = emptyList()
+        _activeCampaignId.value = null
     }
 
     sealed class CampaignState {
         data object Idle : CampaignState()
         data object Sending : CampaignState()
         data class Completed(val sent: Int, val failed: Int) : CampaignState()
+        data class Paused(val sent: Int, val failed: Int, val remaining: Int) : CampaignState()
         data class Error(val message: String) : CampaignState()
     }
 }

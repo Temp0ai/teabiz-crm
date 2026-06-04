@@ -26,7 +26,9 @@ data class Campaign(
     val mediaType: String = "",
     val currentBatch: Int = 0,
     val totalBatches: Int = 0,
-    val currentBatchProgress: String = ""
+    val currentBatchProgress: String = "",
+    val sentContacts: String = "",
+    val remainingContacts: String = ""
 )
 
 enum class CampaignStatus(val displayName: String) {
