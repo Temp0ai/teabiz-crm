@@ -381,7 +381,7 @@ fun CampaignItem(
                     Text(campaign.failedCount.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = StatusLost)
                     Text("Failed", style = MaterialTheme.typography.labelSmall)
                 }
-                Column(horizontalAlignment = Alignment.CenterVertically) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(campaign.totalRecipients.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = CoffeeBrown)
                     Text("Total", style = MaterialTheme.typography.labelSmall)
                 }

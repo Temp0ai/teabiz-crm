@@ -222,7 +222,7 @@ class AiMediaGenerator @Inject constructor(
                 "Manufacturing facility",
                 "Contact details overlay"
             ),
-            music = "Upbeat, inspiring corporate",
+            musicSuggestion = "Upbeat, inspiring corporate",
             captions = "Premium Quality | Best Prices | Bulk Orders",
             hashtags = listOf("teapremix", "coffeepremix", "vendingmachine", "teabusiness", "coffeelovers")
         )
