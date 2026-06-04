@@ -2,6 +2,7 @@ package com.teabiz.crm.di
 
 import com.teabiz.crm.data.remote.AiService
 import com.teabiz.crm.data.remote.WhatsAppService
+import com.teabiz.crm.data.remote.WhatsAppCatalogFetcher
 import com.teabiz.crm.data.remote.SEOService
 import com.teabiz.crm.data.remote.GeminiService
 import dagger.Module
@@ -39,8 +40,14 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideAiService(okHttpClient: OkHttpClient): AiService {
-        return AiService(okHttpClient)
+    fun provideGeminiService(): GeminiService {
+        return GeminiService()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiService(geminiService: GeminiService): AiService {
+        return AiService(geminiService)
     }
 
     @Provides
@@ -51,7 +58,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideGeminiService(): GeminiService {
-        return GeminiService()
+    fun provideWhatsAppCatalogFetcher(okHttpClient: OkHttpClient): WhatsAppCatalogFetcher {
+        return WhatsAppCatalogFetcher(okHttpClient)
     }
 }

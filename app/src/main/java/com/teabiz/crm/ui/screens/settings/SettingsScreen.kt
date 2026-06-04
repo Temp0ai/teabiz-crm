@@ -71,9 +71,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 SettingsTextField(
                     value = editApiKey,
                     onValueChange = { editApiKey = it },
-                    label = "OpenAI API Key",
+                    label = "Gemini API Key",
                     icon = Icons.Default.Key,
-                    placeholder = "sk-..."
+                    placeholder = "AIza..."
                 )
 
                 SettingsTextField(

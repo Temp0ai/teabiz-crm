@@ -88,17 +88,6 @@ class HashtagViewModel @Inject constructor(
                     } catch (_: Exception) {}
                 }
 
-                // Fallback to OpenAI if Gemini failed
-                if (hashtags.size < 5) {
-                    try {
-                        val aiResponse = aiService.generateHashtags(product, platform, count)
-                        val parsed = parseHashtagsFromResponse(aiResponse.content)
-                        if (parsed.size > hashtags.size) {
-                            hashtags = parsed
-                        }
-                    } catch (_: Exception) {}
-                }
-
                 if (hashtags.size >= 5) {
                     _generatedHashtags.value = hashtags
                 } else {

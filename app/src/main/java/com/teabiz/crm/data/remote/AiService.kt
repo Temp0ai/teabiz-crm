@@ -1,30 +1,23 @@
 package com.teabiz.crm.data.remote
 
-import com.google.gson.Gson
-import com.google.gson.annotations.SerializedName
 import com.teabiz.crm.data.model.AIResponse
 import com.teabiz.crm.data.model.Lead
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
+import com.google.ai.client.generativeai.GenerativeModel
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AiService @Inject constructor(
-    private val okHttpClient: OkHttpClient
+    private val geminiService: GeminiService
 ) {
-    private val gson = Gson()
     private var apiKey: String = ""
-    private var model: String = "gpt-4"
 
-    fun configure(apiKey: String, model: String = "gpt-4") {
+    fun configure(apiKey: String) {
         this.apiKey = apiKey
-        this.model = model
+        geminiService.configure(apiKey)
     }
+
+    fun isConfigured(): Boolean = apiKey.isNotBlank()
 
     suspend fun generateFollowUpMessage(
         lead: Lead,
@@ -218,58 +211,45 @@ class AiService @Inject constructor(
     }
 
     suspend fun generateResponse(prompt: String): AIResponse {
-        return withContext(Dispatchers.IO) {
-            try {
-                if (apiKey.isBlank()) {
-                    return@withContext AIResponse(
-                        content = generateFallbackMessage(prompt),
-                        model = "fallback",
-                        tokensUsed = 0
-                    )
-                }
+        return try {
+            if (apiKey.isBlank()) {
+                return AIResponse(
+                    content = generateFallbackMessage(prompt),
+                    model = "fallback",
+                    tokensUsed = 0
+                )
+            }
 
-                val body = gson.toJson(mapOf(
-                    "model" to model,
-                    "messages" to listOf(
-                        mapOf("role" to "system", "content" to "You are a professional sales and marketing AI for a tea and coffee products business. Generate compelling, personalized messages that drive engagement and sales."),
-                        mapOf("role" to "user", "content" to prompt)
-                    ),
-                    "max_tokens" to 500,
-                    "temperature" to 0.7
-                ))
+            val model = GenerativeModel(
+                modelName = "gemini-1.5-flash",
+                apiKey = apiKey
+            )
 
-                val request = Request.Builder()
-                    .url("https://api.openai.com/v1/chat/completions")
-                    .addHeader("Authorization", "Bearer $apiKey")
-                    .addHeader("Content-Type", "application/json")
-                    .post(body.toRequestBody("application/json".toMediaType()))
-                    .build()
+            val systemPrompt = "You are a professional sales and marketing AI for a tea and coffee products business. Generate compelling, personalized messages that drive engagement and sales."
+            val fullPrompt = "$systemPrompt\n\n$prompt"
 
-                val response = okHttpClient.newCall(request).execute()
-                val responseBody = response.body?.string() ?: ""
+            val response = model.generateContent(fullPrompt)
+            val content = response.text?.trim() ?: ""
 
-                if (response.isSuccessful) {
-                    val jsonResponse = gson.fromJson(responseBody, OpenAIResponse::class.java)
-                    val content = jsonResponse.choices.firstOrNull()?.message?.content ?: ""
-                    AIResponse(
-                        content = content.trim(),
-                        model = model,
-                        tokensUsed = jsonResponse.usage?.totalTokens ?: 0
-                    )
-                } else {
-                    AIResponse(
-                        content = generateFallbackMessage(prompt),
-                        model = "fallback",
-                        tokensUsed = 0
-                    )
-                }
-            } catch (e: Exception) {
+            if (content.isNotBlank()) {
+                AIResponse(
+                    content = content,
+                    model = "gemini-1.5-flash",
+                    tokensUsed = 0
+                )
+            } else {
                 AIResponse(
                     content = generateFallbackMessage(prompt),
                     model = "fallback",
                     tokensUsed = 0
                 )
             }
+        } catch (e: Exception) {
+            AIResponse(
+                content = generateFallbackMessage(prompt),
+                model = "fallback",
+                tokensUsed = 0
+            )
         }
     }
 
@@ -348,24 +328,3 @@ class AiService @Inject constructor(
         }
     }
 }
-
-data class OpenAIResponse(
-    val choices: List<Choice>,
-    val usage: Usage?
-)
-
-data class Choice(
-    val message: MessageContent,
-    val finishReason: String?
-)
-
-data class MessageContent(
-    val role: String,
-    val content: String
-)
-
-data class Usage(
-    val promptTokens: Int,
-    val completionTokens: Int,
-    val totalTokens: Int
-)
