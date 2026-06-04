@@ -59,11 +59,21 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
                         fontWeight = FontWeight.Bold
                     )
                 }
-            FloatingActionButton(
-                onClick = { showCreateDialog = true },
-                containerColor = TeaGreen
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Campaign")
+            Row {
+                IconButton(onClick = onNavigateToBot) {
+                    Icon(
+                        Icons.Default.SmartToy,
+                        contentDescription = "Bot",
+                        tint = Color(0xFF25D366),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                FloatingActionButton(
+                    onClick = { showCreateDialog = true },
+                    containerColor = TeaGreen
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Create Campaign")
+                }
             }
         }
 
