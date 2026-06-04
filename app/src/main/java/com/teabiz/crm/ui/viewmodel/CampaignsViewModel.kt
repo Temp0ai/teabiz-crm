@@ -154,10 +154,10 @@ class CampaignsViewModel @Inject constructor(
                 }
             }
             if (priority.isNotBlank()) {
-                filtered = filtered.filter { it.priority.name.equals(priority, ignoreCase = true) }
+                filtered = filtered.filter { lead -> lead.priority.name.equals(priority, ignoreCase = true) }
             }
             if (source.isNotBlank()) {
-                filtered = filtered.filter { it.source.name.equals(source, ignoreCase = true) }
+                filtered = filtered.filter { lead -> lead.source.name.equals(source, ignoreCase = true) }
             }
             if (city.isNotBlank()) {
                 filtered = filtered.filter { it.city.contains(city, ignoreCase = true) }
@@ -278,13 +278,13 @@ class CampaignsViewModel @Inject constructor(
                 }.filter { it.phone.isNotBlank() && it.phone !in blacklisted }
 
                 if (campaign.targetPriority.isNotBlank()) {
-                    filteredLeads = filteredLeads.filter {
-                        it.priority.name.equals(campaign.targetPriority, ignoreCase = true)
+                    filteredLeads = filteredLeads.filter { lead ->
+                        lead.priority.name.equals(campaign.targetPriority, ignoreCase = true)
                     }
                 }
                 if (campaign.targetSource.isNotBlank()) {
-                    filteredLeads = filteredLeads.filter {
-                        it.source.name.equals(campaign.targetSource, ignoreCase = true)
+                    filteredLeads = filteredLeads.filter { lead ->
+                        lead.source.name.equals(campaign.targetSource, ignoreCase = true)
                     }
                 }
                 if (campaign.targetCity.isNotBlank()) {
