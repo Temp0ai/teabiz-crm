@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavType
@@ -79,10 +80,18 @@ fun AppNavigation(
                         val selected = currentDestination?.hierarchy?.any { it.route == item.screen.route } == true
                         NavigationBarItem(
                             icon = {
-                                Icon(
-                                    if (selected) item.screen.selectedIcon else item.screen.icon,
-                                    contentDescription = item.label
-                                )
+                                if (item.screen.iconRes != 0) {
+                                    Icon(
+                                        painter = painterResource(id = item.screen.iconRes),
+                                        contentDescription = item.label,
+                                        tint = if (selected) TeaGreen else Color.Gray
+                                    )
+                                } else {
+                                    Icon(
+                                        if (selected) item.screen.selectedIcon else item.screen.icon,
+                                        contentDescription = item.label
+                                    )
+                                }
                             },
                             label = { Text(item.label, style = MaterialTheme.typography.labelSmall) },
                             selected = selected,

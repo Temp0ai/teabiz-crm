@@ -16,8 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import coil.compose.rememberAsyncImagePainter
 import com.teabiz.crm.data.model.Campaign
 import com.teabiz.crm.ui.theme.*
@@ -42,11 +45,20 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-                Text(
-                    text = "WhatsApp",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        painter = painterResource(id = com.teabiz.crm.R.drawable.ic_whatsapp),
+                        contentDescription = "WhatsApp",
+                        tint = Color(0xFF25D366),
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "WhatsApp",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             FloatingActionButton(
                 onClick = { showCreateDialog = true },
                 containerColor = TeaGreen
@@ -350,7 +362,18 @@ fun CreateCampaignDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create WhatsApp Campaign") },
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(id = com.teabiz.crm.R.drawable.ic_whatsapp),
+                    contentDescription = "WhatsApp",
+                    tint = Color(0xFF25D366),
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Create WhatsApp Campaign")
+            }
+        },
         text = {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 item {

@@ -1,15 +1,16 @@
 package com.teabiz.crm.ui.navigation
 
+import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
 
-sealed class Screen(val route: String, val title: String, val icon: ImageVector, val selectedIcon: ImageVector) {
+sealed class Screen(val route: String, val title: String, val icon: ImageVector, val selectedIcon: ImageVector, @DrawableRes val iconRes: Int = 0) {
     object Dashboard : Screen("dashboard", "Home", Icons.Outlined.Dashboard, Icons.Filled.Dashboard)
     object Leads : Screen("leads", "Leads", Icons.Outlined.People, Icons.Filled.People)
     object Import : Screen("import", "Import", Icons.Outlined.FileUpload, Icons.Filled.FileUpload)
-    object Campaigns : Screen("campaigns", "WhatsApp", Icons.Outlined.Chat, Icons.Filled.Chat)
+    object Campaigns : Screen("campaigns", "WhatsApp", Icons.Outlined.Chat, Icons.Filled.Chat, com.teabiz.crm.R.drawable.ic_whatsapp)
     object Marketing : Screen("marketing", "Marketing", Icons.Outlined.TrendingUp, Icons.Filled.TrendingUp)
     object Settings : Screen("settings", "Settings", Icons.Outlined.Settings, Icons.Filled.Settings)
 
