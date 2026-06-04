@@ -4,6 +4,7 @@ import android.content.Context
 import com.teabiz.crm.data.remote.AiService
 import com.teabiz.crm.data.remote.AiSalesAssistant
 import com.teabiz.crm.data.remote.AiMediaGenerator
+import com.teabiz.crm.data.remote.AiVideoGenerator
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.remote.WhatsAppCatalogFetcher
 import com.teabiz.crm.data.remote.SEOService
@@ -76,5 +77,11 @@ object NetworkModule {
     @Singleton
     fun provideAiMediaGenerator(@ApplicationContext context: Context, geminiService: GeminiService): AiMediaGenerator {
         return AiMediaGenerator(context, geminiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiVideoGenerator(@ApplicationContext context: Context, geminiService: GeminiService): AiVideoGenerator {
+        return AiVideoGenerator(context, geminiService)
     }
 }

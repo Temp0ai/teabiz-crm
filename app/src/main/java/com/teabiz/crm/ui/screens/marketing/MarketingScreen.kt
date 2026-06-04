@@ -26,7 +26,8 @@ fun MarketingScreen(
     onNavigateToGmb: () -> Unit,
     onNavigateToHashtags: () -> Unit = {},
     onNavigateToProductCatalog: () -> Unit = {},
-    onNavigateToAiMedia: () -> Unit = {}
+    onNavigateToAiMedia: () -> Unit = {},
+    onNavigateToAiVideo: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -101,6 +102,14 @@ fun MarketingScreen(
             icon = Icons.Default.VideoLibrary,
             color = Color(0xFF9C27B0),
             onClick = onNavigateToAiMedia
+        )
+
+        MarketingCard(
+            title = "Video & Image Creator",
+            description = "Create video scripts, image prompts, batch content. Get platform-specific captions and hashtags.",
+            icon = Icons.Default.MovieCreation,
+            color = Color(0xFFFF5722),
+            onClick = onNavigateToAiVideo
         )
 
         Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {

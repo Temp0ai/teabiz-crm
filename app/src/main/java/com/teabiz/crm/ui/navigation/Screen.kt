@@ -31,6 +31,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector,
     object AiSalesDashboard : Screen("ai_sales_dashboard", "AI Assistant", Icons.Outlined.AutoAwesome, Icons.Filled.AutoAwesome)
     object HashtagGenerator : Screen("hashtag_generator", "Hashtags", Icons.Outlined.Tag, Icons.Filled.Tag)
     object AiMediaGenerator : Screen("ai_media_generator", "Media AI", Icons.Outlined.VideoLibrary, Icons.Filled.VideoLibrary)
+    object AiVideoGenerator : Screen("ai_video_generator", "Video AI", Icons.Outlined.MovieCreation, Icons.Filled.MovieCreation)
 }
 
 data class BottomNavItem(
