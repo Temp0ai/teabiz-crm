@@ -5,6 +5,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.teabiz.crm.data.local.BlacklistDao
+import com.teabiz.crm.data.local.CampaignAnalyticsDao
+import com.teabiz.crm.data.local.CampaignTemplateDao
 import com.teabiz.crm.data.model.*
 import com.teabiz.crm.data.remote.AiService
 import com.teabiz.crm.data.remote.WhatsAppService
@@ -13,6 +16,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,10 +25,19 @@ class CampaignsViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val leadRepository: LeadRepository,
     private val whatsappService: WhatsAppService,
-    private val aiService: AiService
+    private val aiService: AiService,
+    private val templateDao: CampaignTemplateDao,
+    private val blacklistDao: BlacklistDao,
+    private val analyticsDao: CampaignAnalyticsDao
 ) : ViewModel() {
 
     val campaigns: StateFlow<List<Campaign>> = leadRepository.getAllCampaigns()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val templates: StateFlow<List<CampaignTemplate>> = templateDao.getAllTemplates()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val blacklistedContacts: StateFlow<List<BlacklistedContact>> = blacklistDao.getAllBlacklisted()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _campaignState = MutableStateFlow<CampaignState>(CampaignState.Idle)
@@ -43,35 +57,6 @@ class CampaignsViewModel @Inject constructor(
 
     private val _filteredLeads = MutableStateFlow<List<Lead>>(emptyList())
     val filteredLeads: StateFlow<List<Lead>> = _filteredLeads
-
-    fun getContactCountByCategory(category: String) {
-        viewModelScope.launch {
-            val leads = leadRepository.getWhatsAppOptInLeads().first()
-            val count = if (category.isBlank()) {
-                leads.size
-            } else {
-                leads.count { lead ->
-                    lead.productInterest.any { it.contains(category, ignoreCase = true) }
-                }
-            }
-            _contactCount.value = count
-            _filteredLeads.value = if (category.isBlank()) {
-                leads
-            } else {
-                leads.filter { lead ->
-                    lead.productInterest.any { it.contains(category, ignoreCase = true) }
-                }
-            }
-        }
-    }
-
-    fun getAllLeadsCount() {
-        viewModelScope.launch {
-            val leads = leadRepository.getWhatsAppOptInLeads().first()
-            _contactCount.value = leads.size
-            _filteredLeads.value = leads
-        }
-    }
 
     private val _selectedMediaType = MutableStateFlow("")
     val selectedMediaType: StateFlow<String> = _selectedMediaType
@@ -93,20 +78,97 @@ class CampaignsViewModel @Inject constructor(
     private val _activeCampaignId = MutableStateFlow<String?>(null)
     val activeCampaignId: StateFlow<String?> = _activeCampaignId
 
-    fun pauseCampaign() {
-        _isPaused.value = true
-        _sendStatus.value = "Campaign paused"
+    private val _campaignAnalytics = MutableStateFlow<CampaignPerformance?>(null)
+    val campaignAnalytics: StateFlow<CampaignPerformance?> = _campaignAnalytics
+
+    private val _bestTimeSuggestion = MutableStateFlow("")
+    val bestTimeSuggestion: StateFlow<String> = _bestTimeSuggestion
+
+    init {
+        calculateBestTimeToSend()
     }
 
-    fun resumeCampaign() {
-        _isPaused.value = false
-        _sendStatus.value = "Campaign resumed"
+    private fun calculateBestTimeToSend() {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+
+        val suggestion = when {
+            hour in 9..11 -> "Good morning! 9-11 AM is the best time for B2B messages. High open rates."
+            hour in 14..16 -> "Afternoon slot (2-4 PM) works well for business inquiries."
+            hour in 19..21 -> "Evening (7-9 PM) is great for promotional messages. People relax and check WhatsApp."
+            dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY -> "Weekend! Consider scheduling for Monday morning instead."
+            else -> "Current time is good for sending. Best times: 9-11 AM, 2-4 PM, 7-9 PM."
+        }
+        _bestTimeSuggestion.value = suggestion
     }
 
-    fun stopCampaign() {
-        _isStopped.value = true
-        _isPaused.value = false
-        _sendStatus.value = "Campaign stopped"
+    fun getContactCountByCategory(category: String) {
+        viewModelScope.launch {
+            val leads = leadRepository.getWhatsAppOptInLeads().first()
+            val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone }
+            val count = if (category.isBlank()) {
+                leads.count { it.phone !in blacklisted }
+            } else {
+                leads.count { lead ->
+                    lead.productInterest.any { it.contains(category, ignoreCase = true) } && lead.phone !in blacklisted
+                }
+            }
+            _contactCount.value = count
+            _filteredLeads.value = if (category.isBlank()) {
+                leads.filter { it.phone !in blacklisted }
+            } else {
+                leads.filter { lead ->
+                    lead.productInterest.any { it.contains(category, ignoreCase = true) } && lead.phone !in blacklisted
+                }
+            }
+        }
+    }
+
+    fun getAllLeadsCount() {
+        viewModelScope.launch {
+            val leads = leadRepository.getWhatsAppOptInLeads().first()
+            val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone }
+            _contactCount.value = leads.count { it.phone !in blacklisted }
+            _filteredLeads.value = leads.filter { it.phone !in blacklisted }
+        }
+    }
+
+    fun getFilteredLeads(
+        category: String = "",
+        priority: String = "",
+        source: String = "",
+        city: String = "",
+        minScore: Int = 0
+    ) {
+        viewModelScope.launch {
+            val leads = leadRepository.getWhatsAppOptInLeads().first()
+            val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone
+
+            }
+            var filtered = leads.filter { it.phone !in blacklisted }
+
+            if (category.isNotBlank()) {
+                filtered = filtered.filter { lead ->
+                    lead.productInterest.any { it.contains(category, ignoreCase = true) }
+                }
+            }
+            if (priority.isNotBlank()) {
+                filtered = filtered.filter { it.priority.name.equals(priority, ignoreCase = true) }
+            }
+            if (source.isNotBlank()) {
+                filtered = filtered.filter { it.source.name.equals(source, ignoreCase = true) }
+            }
+            if (city.isNotBlank()) {
+                filtered = filtered.filter { it.city.contains(city, ignoreCase = true) }
+            }
+            if (minScore > 0) {
+                filtered = filtered.filter { it.leadScore >= minScore }
+            }
+
+            _contactCount.value = filtered.size
+            _filteredLeads.value = filtered
+        }
     }
 
     fun createCampaign(
@@ -115,9 +177,19 @@ class CampaignsViewModel @Inject constructor(
         category: String,
         batchSize: Int = 100,
         mediaUri: String = "",
-        mediaType: String = ""
+        mediaType: String = "",
+        scheduledAt: Long? = null,
+        priority: String = "",
+        source: String = "",
+        city: String = "",
+        followUpAfterHours: Int = 0,
+        followUpMessage: String = "",
+        abTestMessage: String = "",
+        language: String = "English",
+        tone: String = "Professional"
     ) {
         viewModelScope.launch {
+            val status = if (scheduledAt != null && scheduledAt > System.currentTimeMillis()) "SCHEDULED" else "DRAFT"
             val campaign = Campaign(
                 name = name,
                 messageTemplate = template,
@@ -125,7 +197,17 @@ class CampaignsViewModel @Inject constructor(
                 batchSize = batchSize,
                 mediaUri = mediaUri,
                 mediaType = mediaType,
-                status = "DRAFT"
+                status = status,
+                scheduledAt = scheduledAt,
+                targetPriority = priority,
+                targetSource = source,
+                targetCity = city,
+                followUpAfterHours = followUpAfterHours,
+                followUpMessage = followUpMessage,
+                abTestMessage = abTestMessage,
+                abTestEnabled = abTestMessage.isNotBlank(),
+                language = language,
+                tone = tone
             )
             leadRepository.insertCampaign(campaign)
         }
@@ -186,13 +268,30 @@ class CampaignsViewModel @Inject constructor(
                 val campaign = leadRepository.getCampaignById(campaignId) ?: return@launch
                 val leads = leadRepository.getWhatsAppOptInLeads().first()
 
-                val filteredLeads = if (campaign.targetCategory.isNotBlank()) {
+                val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone }
+                var filteredLeads = if (campaign.targetCategory.isNotBlank()) {
                     leads.filter { lead ->
                         lead.productInterest.any { it.contains(campaign.targetCategory, ignoreCase = true) }
                     }
                 } else {
                     leads
-                }.filter { it.phone.isNotBlank() }
+                }.filter { it.phone.isNotBlank() && it.phone !in blacklisted }
+
+                if (campaign.targetPriority.isNotBlank()) {
+                    filteredLeads = filteredLeads.filter {
+                        it.priority.name.equals(campaign.targetPriority, ignoreCase = true)
+                    }
+                }
+                if (campaign.targetSource.isNotBlank()) {
+                    filteredLeads = filteredLeads.filter {
+                        it.source.name.equals(campaign.targetSource, ignoreCase = true)
+                    }
+                }
+                if (campaign.targetCity.isNotBlank()) {
+                    filteredLeads = filteredLeads.filter {
+                        it.city.contains(campaign.targetCity, ignoreCase = true)
+                    }
+                }
 
                 if (filteredLeads.isEmpty()) {
                     _campaignState.value = CampaignState.Error("No contacts found with phone numbers")
@@ -215,6 +314,8 @@ class CampaignsViewModel @Inject constructor(
                 var failedCount = 0
                 val sentList = mutableListOf<String>()
                 val remainingList = filteredLeads.map { "${it.name} (${it.phone})" }.toMutableList()
+                val messagesA = mutableListOf<String>()
+                val messagesB = mutableListOf<String>()
 
                 for ((index, lead) in filteredLeads.withIndex()) {
                     while (_isPaused.value) {
@@ -235,10 +336,14 @@ class CampaignsViewModel @Inject constructor(
                         return@launch
                     }
 
-                    val personalizedMessage = campaign.messageTemplate
+                    val isTypeA = if (campaign.abTestEnabled) index % 2 == 0 else true
+                    val messageTemplate = if (isTypeA) campaign.messageTemplate else campaign.abTestMessage.ifBlank { campaign.messageTemplate }
+
+                    val personalizedMessage = messageTemplate
                         .replace("{name}", lead.name)
                         .replace("{company}", lead.company)
                         .replace("{product}", lead.productInterest.joinToString(", "))
+                        .replace("{city}", lead.city)
 
                     val cleanPhone = lead.phone.replace(Regex("[^0-9]"), "")
                     val contactInfo = "${lead.name} (${lead.phone})"
@@ -262,6 +367,17 @@ class CampaignsViewModel @Inject constructor(
                         _remainingContacts.value = remainingList.toList()
                         _sendProgress.value = Pair(index + 1, total)
                         _sendStatus.value = "Opened WhatsApp for ${lead.name} (${index + 1}/$total)"
+
+                        val analytics = CampaignAnalytics(
+                            campaignId = campaignId,
+                            sentAt = System.currentTimeMillis(),
+                            contactPhone = lead.phone,
+                            contactName = lead.name,
+                            messageType = if (isTypeA) "A" else "B"
+                        )
+                        analyticsDao.insertAnalytics(analytics)
+
+                        if (isTypeA) messagesA.add(personalizedMessage) else messagesB.add(personalizedMessage)
 
                         kotlinx.coroutines.delay(2000L)
                     } catch (e: Exception) {
@@ -288,6 +404,47 @@ class CampaignsViewModel @Inject constructor(
                 _campaignState.value = CampaignState.Error(e.message ?: "Campaign failed")
                 _activeCampaignId.value = null
             }
+        }
+    }
+
+    fun pauseCampaign() {
+        _isPaused.value = true
+        _sendStatus.value = "Campaign paused"
+    }
+
+    fun resumeCampaign() {
+        _isPaused.value = false
+        _sendStatus.value = "Campaign resumed"
+    }
+
+    fun stopCampaign() {
+        _isStopped.value = true
+        _isPaused.value = false
+        _sendStatus.value = "Campaign stopped"
+    }
+
+    fun loadCampaignAnalytics(campaignId: String) {
+        viewModelScope.launch {
+            val campaign = leadRepository.getCampaignById(campaignId) ?: return@launch
+            val readCount = analyticsDao.getReadCount(campaignId)
+            val repliedCount = analyticsDao.getRepliedCount(campaignId)
+            val convertedCount = analyticsDao.getConvertedCount(campaignId)
+
+            val typeA = analyticsDao.getAnalyticsByType(campaignId, "A")
+            val typeB = analyticsDao.getAnalyticsByType(campaignId, "B")
+
+            _campaignAnalytics.value = CampaignPerformance(
+                campaignId = campaignId,
+                campaignName = campaign.name,
+                totalSent = campaign.sentCount,
+                readCount = readCount,
+                repliedCount = repliedCount,
+                convertedCount = convertedCount,
+                typeASent = typeA.size,
+                typeBSent = typeB.size,
+                typeAReplied = typeA.count { it.repliedAt != null },
+                typeBReplied = typeB.count { it.repliedAt != null }
+            )
         }
     }
 
@@ -334,6 +491,42 @@ class CampaignsViewModel @Inject constructor(
         _activeCampaignId.value = null
     }
 
+    fun saveTemplate(name: String, message: String, category: String, tone: String, language: String) {
+        viewModelScope.launch {
+            val template = CampaignTemplate(
+                name = name,
+                messageTemplate = message,
+                category = category,
+                tone = tone,
+                language = language
+            )
+            templateDao.insertTemplate(template)
+        }
+    }
+
+    fun deleteTemplate(template: CampaignTemplate) {
+        viewModelScope.launch {
+            templateDao.deleteTemplate(template)
+        }
+    }
+
+    fun addBlacklisted(phone: String, name: String, reason: String) {
+        viewModelScope.launch {
+            val contact = BlacklistedContact(
+                phone = phone,
+                name = name,
+                reason = reason
+            )
+            blacklistDao.addBlacklisted(contact)
+        }
+    }
+
+    fun removeBlacklisted(contact: BlacklistedContact) {
+        viewModelScope.launch {
+            blacklistDao.removeBlacklisted(contact)
+        }
+    }
+
     sealed class CampaignState {
         data object Idle : CampaignState()
         data object Sending : CampaignState()
@@ -341,4 +534,17 @@ class CampaignsViewModel @Inject constructor(
         data class Paused(val sent: Int, val failed: Int, val remaining: Int) : CampaignState()
         data class Error(val message: String) : CampaignState()
     }
+
+    data class CampaignPerformance(
+        val campaignId: String,
+        val campaignName: String,
+        val totalSent: Int,
+        val readCount: Int,
+        val repliedCount: Int,
+        val convertedCount: Int,
+        val typeASent: Int = 0,
+        val typeBSent: Int = 0,
+        val typeAReplied: Int = 0,
+        val typeBReplied: Int = 0
+    )
 }

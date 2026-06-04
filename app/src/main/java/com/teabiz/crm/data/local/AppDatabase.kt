@@ -14,6 +14,9 @@ import com.teabiz.crm.data.model.*
         FollowUp::class,
         ImportSession::class,
         Campaign::class,
+        CampaignTemplate::class,
+        BlacklistedContact::class,
+        CampaignAnalytics::class,
         SeoKeyword::class,
         Competitor::class,
         ContentCalendar::class,
@@ -21,7 +24,7 @@ import com.teabiz.crm.data.model.*
         SavedFilter::class,
         AppSetting::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -32,6 +35,9 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun followUpDao(): FollowUpDao
     abstract fun importSessionDao(): ImportSessionDao
     abstract fun campaignDao(): CampaignDao
+    abstract fun campaignTemplateDao(): CampaignTemplateDao
+    abstract fun blacklistDao(): BlacklistDao
+    abstract fun campaignAnalyticsDao(): CampaignAnalyticsDao
     abstract fun seoKeywordDao(): SeoKeywordDao
     abstract fun competitorDao(): CompetitorDao
     abstract fun contentCalendarDao(): ContentCalendarDao

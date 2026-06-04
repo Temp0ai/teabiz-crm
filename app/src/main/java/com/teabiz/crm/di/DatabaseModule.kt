@@ -2,6 +2,9 @@ package com.teabiz.crm.di
 
 import android.content.Context
 import com.teabiz.crm.data.local.AppDatabase
+import com.teabiz.crm.data.local.BlacklistDao
+import com.teabiz.crm.data.local.CampaignAnalyticsDao
+import com.teabiz.crm.data.local.CampaignTemplateDao
 import com.teabiz.crm.data.repository.LeadRepository
 import com.teabiz.crm.data.repository.MarketingRepository
 import dagger.Module
@@ -31,5 +34,23 @@ object DatabaseModule {
     @Singleton
     fun provideMarketingRepository(database: AppDatabase): MarketingRepository {
         return MarketingRepository(database)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCampaignTemplateDao(database: AppDatabase): CampaignTemplateDao {
+        return database.campaignTemplateDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideBlacklistDao(database: AppDatabase): BlacklistDao {
+        return database.blacklistDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCampaignAnalyticsDao(database: AppDatabase): CampaignAnalyticsDao {
+        return database.campaignAnalyticsDao()
     }
 }

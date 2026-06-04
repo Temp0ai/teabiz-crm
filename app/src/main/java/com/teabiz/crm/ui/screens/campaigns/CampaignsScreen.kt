@@ -19,12 +19,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.width
 import coil.compose.rememberAsyncImagePainter
 import com.teabiz.crm.data.model.Campaign
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.CampaignsViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -274,8 +274,8 @@ fun CampaignsScreen(viewModel: CampaignsViewModel, onNavigateToBot: () -> Unit =
         CreateCampaignDialog(
             viewModel = viewModel,
             onDismiss = { showCreateDialog = false },
-            onCreate = { name, template, category, batchSize, mediaUri, mediaType ->
-                viewModel.createCampaign(name, template, category, batchSize, mediaUri, mediaType)
+            onCreate = { name, template, category, batchSize, mediaUri, mediaType, scheduledAt, priority, source, city, followUpHours, followUpMessage, abTestMessage, language, tone ->
+                viewModel.createCampaign(name, template, category, batchSize, mediaUri, mediaType, scheduledAt, priority, source, city, followUpHours, followUpMessage, abTestMessage, language, tone)
                 showCreateDialog = false
             }
         )
@@ -313,6 +313,28 @@ fun CampaignItem(
                     Icon(Icons.Default.Category, contentDescription = null, tint = CoffeeBrown, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(campaign.targetCategory, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+            }
+
+            if (campaign.targetPriority.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocalFireDepartment, contentDescription = null, tint = StatusLost, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Priority: ${campaign.targetPriority}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+            }
+
+            if (campaign.scheduledAt != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Schedule, contentDescription = null, tint = StatusFollowUp, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Scheduled: ${SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(campaign.scheduledAt))}", style = MaterialTheme.typography.bodySmall, color = StatusFollowUp)
+                }
+            }
+
+            if (campaign.abTestEnabled) {
+                Surface(shape = MaterialTheme.shapes.extraSmall, color = Color(0xFF7C4DFF).copy(alpha = 0.15f)) {
+                    Text("A/B Test", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color(0xFF7C4DFF))
                 }
             }
 
@@ -369,7 +391,7 @@ fun CampaignItem(
                 }
             }
 
-            if (campaign.status == "DRAFT") {
+            if (campaign.status == "DRAFT" || campaign.status == "SCHEDULED") {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Button(
                         onClick = onSend,
@@ -378,7 +400,7 @@ fun CampaignItem(
                     ) {
                         Icon(Icons.Default.Send, contentDescription = null)
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Send Now")
+                        Text(if (campaign.status == "SCHEDULED") "Send Now" else "Send Now")
                     }
                     IconButton(onClick = onDelete) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete", tint = StatusLost)
@@ -397,6 +419,8 @@ fun CampaignStatusChip(status: String) {
         "RUNNING" -> StatusNew
         "COMPLETED" -> StatusConverted
         "FAILED" -> StatusLost
+        "PAUSED" -> Color(0xFFFF9800)
+        "RECURRING" -> Color(0xFF7C4DFF)
         else -> Color.Gray
     }
 
@@ -410,7 +434,7 @@ fun CampaignStatusChip(status: String) {
 fun CreateCampaignDialog(
     viewModel: CampaignsViewModel,
     onDismiss: () -> Unit,
-    onCreate: (String, String, String, Int, String, String) -> Unit
+    onCreate: (String, String, String, Int, String, String, Long?, String, String, String, Int, String, String, String, String) -> Unit
 ) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
@@ -423,11 +447,31 @@ fun CreateCampaignDialog(
     val selectedMediaType by viewModel.selectedMediaType.collectAsState()
     val isGeneratingAiText by viewModel.isGeneratingAiText.collectAsState()
     val contactCount by viewModel.contactCount.collectAsState()
+    val templates by viewModel.templates.collectAsState()
+    val bestTimeSuggestion by viewModel.bestTimeSuggestion.collectAsState()
 
     var aiTone by remember { mutableStateOf("Professional") }
     var aiLanguage by remember { mutableStateOf("English") }
     var showToneDropdown by remember { mutableStateOf(false) }
     var showLanguageDropdown by remember { mutableStateOf(false) }
+
+    var selectedPriority by remember { mutableStateOf("") }
+    var showPriorityDropdown by remember { mutableStateOf(false) }
+    var selectedSource by remember { mutableStateOf("") }
+    var showSourceDropdown by remember { mutableStateOf(false) }
+    var selectedCity by remember { mutableStateOf("") }
+
+    var scheduledDateTime by remember { mutableStateOf<Long?>(null) }
+    var showSchedulePicker by remember { mutableStateOf(false) }
+
+    var followUpHours by remember { mutableIntStateOf(0) }
+    var followUpMessage by remember { mutableStateOf("") }
+    var showFollowUp by remember { mutableStateOf(false) }
+
+    var abTestMessage by remember { mutableStateOf("") }
+    var showAbTest by remember { mutableStateOf(false) }
+
+    var showTemplateDropdown by remember { mutableStateOf(false) }
 
     val productCategories = listOf(
         "All Contacts",
@@ -443,12 +487,14 @@ fun CreateCampaignDialog(
         "Masala Chai Premix"
     )
 
-    LaunchedEffect(category) {
-        if (category.isBlank() || category == "All Contacts") {
-            viewModel.getAllLeadsCount()
-        } else {
-            viewModel.getContactCountByCategory(category)
-        }
+    val priorityOptions = listOf("All", "HOT", "WARM", "NORMAL", "COLD")
+    val sourceOptions = listOf("All", "IndiaMART", "JustDial", "Website", "Referral", "Walk-in", "Social Media", "Google Ads", "Facebook Ads", "Instagram", "LinkedIn", "Trade Show", "Cold Call", "Email", "WhatsApp", "Other")
+
+    LaunchedEffect(category, selectedPriority, selectedSource, selectedCity) {
+        val cat = if (category.isBlank() || category == "All Contacts") "" else category
+        val pri = if (selectedPriority.isBlank() || selectedPriority == "All") "" else selectedPriority
+        val src = if (selectedSource.isBlank() || selectedSource == "All") "" else selectedSource
+        viewModel.getFilteredLeads(cat, pri, src, selectedCity)
     }
 
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -482,7 +528,7 @@ fun CreateCampaignDialog(
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Create WhatsApp Campaign")
+                Text("Create Campaign")
             }
         },
         text = {
@@ -497,7 +543,46 @@ fun CreateCampaignDialog(
                     )
                 }
 
-                // Product Category Dropdown with Contact Count
+                // Template selector
+                if (templates.isNotEmpty()) {
+                    item {
+                        Box {
+                            ExposedDropdownMenuBox(
+                                expanded = showTemplateDropdown,
+                                onExpandedChange = { showTemplateDropdown = it }
+                            ) {
+                                OutlinedTextField(
+                                    value = "Load from template...",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Templates") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showTemplateDropdown) },
+                                    leadingIcon = { Icon(Icons.Default.FolderOpen, contentDescription = null) },
+                                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = showTemplateDropdown,
+                                    onDismissRequest = { showTemplateDropdown = false }
+                                ) {
+                                    templates.forEach { t ->
+                                        DropdownMenuItem(
+                                            text = { Text("${t.name} (${t.useCount}x used)") },
+                                            onClick = {
+                                                template = t.messageTemplate
+                                                aiTone = t.tone
+                                                aiLanguage = t.language
+                                                if (t.category.isNotBlank()) category = t.category
+                                                showTemplateDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Product Category with Contact Count
                 item {
                     Box {
                         ExposedDropdownMenuBox(
@@ -511,9 +596,7 @@ fun CreateCampaignDialog(
                                 label = { Text("Target Product Category") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showCategoryDropdown) },
                                 leadingIcon = { Icon(Icons.Default.FilterList, contentDescription = null) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
+                                modifier = Modifier.fillMaxWidth().menuAnchor()
                             )
                             ExposedDropdownMenu(
                                 expanded = showCategoryDropdown,
@@ -531,7 +614,6 @@ fun CreateCampaignDialog(
                             }
                         }
                     }
-                    // Contact count display
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(
@@ -556,16 +638,88 @@ fun CreateCampaignDialog(
                                     fontWeight = FontWeight.Bold,
                                     color = if (contactCount > 0) TeaGreen else Color.Gray
                                 )
-                                if (category.isNotBlank()) {
-                                    Text(
-                                        "Filtered by: $category",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray
-                                    )
+                            }
+                        }
+                    }
+                }
+
+                // Advanced Targeting
+                item {
+                    HorizontalDivider()
+                    Text("Advanced Targeting", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                }
+
+                item {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Box(modifier = Modifier.weight(1f)) {
+                            ExposedDropdownMenuBox(
+                                expanded = showPriorityDropdown,
+                                onExpandedChange = { showPriorityDropdown = it }
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedPriority.ifBlank { "All" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Lead Priority") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showPriorityDropdown) },
+                                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = showPriorityDropdown,
+                                    onDismissRequest = { showPriorityDropdown = false }
+                                ) {
+                                    priorityOptions.forEach { p ->
+                                        DropdownMenuItem(
+                                            text = { Text(p) },
+                                            onClick = {
+                                                selectedPriority = if (p == "All") "" else p
+                                                showPriorityDropdown = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            ExposedDropdownMenuBox(
+                                expanded = showSourceDropdown,
+                                onExpandedChange = { showSourceDropdown = it }
+                            ) {
+                                OutlinedTextField(
+                                    value = selectedSource.ifBlank { "All" },
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    label = { Text("Lead Source") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showSourceDropdown) },
+                                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                                )
+                                ExposedDropdownMenu(
+                                    expanded = showSourceDropdown,
+                                    onDismissRequest = { showSourceDropdown = false }
+                                ) {
+                                    sourceOptions.forEach { s ->
+                                        DropdownMenuItem(
+                                            text = { Text(s) },
+                                            onClick = {
+                                                selectedSource = if (s == "All") "" else s
+                                                showSourceDropdown = false
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
+                }
+
+                item {
+                    OutlinedTextField(
+                        value = selectedCity,
+                        onValueChange = { selectedCity = it },
+                        label = { Text("Target City (optional)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
 
                 item {
@@ -580,9 +734,7 @@ fun CreateCampaignDialog(
                                 readOnly = true,
                                 label = { Text("Batch Size") },
                                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showBatchDropdown) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .menuAnchor()
+                                modifier = Modifier.fillMaxWidth().menuAnchor()
                             )
                             ExposedDropdownMenu(
                                 expanded = showBatchDropdown,
@@ -620,9 +772,7 @@ fun CreateCampaignDialog(
                                     readOnly = true,
                                     label = { Text("Tone") },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showToneDropdown) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor()
+                                    modifier = Modifier.fillMaxWidth().menuAnchor()
                                 )
                                 ExposedDropdownMenu(
                                     expanded = showToneDropdown,
@@ -640,7 +790,6 @@ fun CreateCampaignDialog(
                                 }
                             }
                         }
-
                         Box(modifier = Modifier.weight(1f)) {
                             ExposedDropdownMenuBox(
                                 expanded = showLanguageDropdown,
@@ -652,9 +801,7 @@ fun CreateCampaignDialog(
                                     readOnly = true,
                                     label = { Text("Language") },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showLanguageDropdown) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .menuAnchor()
+                                    modifier = Modifier.fillMaxWidth().menuAnchor()
                                 )
                                 ExposedDropdownMenu(
                                     expanded = showLanguageDropdown,
@@ -699,7 +846,7 @@ fun CreateCampaignDialog(
                         } else {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("AI Generate Engagement Message")
+                            Text("AI Generate Message")
                         }
                     }
                 }
@@ -714,16 +861,101 @@ fun CreateCampaignDialog(
                         minLines = 4
                     )
                     Text(
-                        "Use {name}, {company}, {product} as placeholders",
+                        "Placeholders: {name}, {company}, {product}, {city}",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
                 }
 
+                // Best Time Suggestion
+                item {
+                    Surface(shape = MaterialTheme.shapes.small, color = TeaGreen.copy(alpha = 0.1f)) {
+                        Row(modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Schedule, contentDescription = null, tint = TeaGreen, modifier = Modifier.size(18.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(bestTimeSuggestion, style = MaterialTheme.typography.bodySmall, color = TeaGreen)
+                        }
+                    }
+                }
+
+                // Schedule
+                item {
+                    HorizontalDivider()
+                    Text("Scheduling", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                }
+
+                item {
+                    OutlinedButton(
+                        onClick = { showSchedulePicker = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (scheduledDateTime != null) "Scheduled: ${SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale.getDefault()).format(Date(scheduledDateTime!!))}" else "Schedule for Later (optional)")
+                    }
+                }
+
+                // Follow-up
+                item {
+                    HorizontalDivider()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("Follow-up Sequence", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                        Switch(checked = showFollowUp, onCheckedChange = { showFollowUp = it })
+                    }
+                }
+
+                if (showFollowUp) {
+                    item {
+                        OutlinedTextField(
+                            value = followUpHours.toString(),
+                            onValueChange = { followUpHours = it.toIntOrNull() ?: 0 },
+                            label = { Text("Send follow-up after (hours)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true
+                        )
+                        OutlinedTextField(
+                            value = followUpMessage,
+                            onValueChange = { followUpMessage = it },
+                            label = { Text("Follow-up Message") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 2
+                        )
+                    }
+                }
+
+                // A/B Testing
+                item {
+                    HorizontalDivider()
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("A/B Testing", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
+                        Switch(checked = showAbTest, onCheckedChange = { showAbTest = it })
+                    }
+                }
+
+                if (showAbTest) {
+                    item {
+                        OutlinedTextField(
+                            value = abTestMessage,
+                            onValueChange = { abTestMessage = it },
+                            label = { Text("Variant B Message") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3
+                        )
+                        Text("50% contacts get Message A, 50% get Message B", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    }
+                }
+
                 // Media Attach
                 item {
                     HorizontalDivider()
-                    Spacer(modifier = Modifier.height(4.dp))
                     Text("Attach Media (Optional)", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleSmall)
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -785,13 +1017,13 @@ fun CreateCampaignDialog(
         confirmButton = {
             Button(
                 onClick = {
+                    viewModel.saveTemplate(name, template, category, aiTone, aiLanguage)
                     onCreate(
-                        name,
-                        template,
-                        category,
-                        batchSize,
-                        selectedMediaUri?.toString() ?: "",
-                        selectedMediaType
+                        name, template, category, batchSize,
+                        selectedMediaUri?.toString() ?: "", selectedMediaType,
+                        scheduledDateTime, selectedPriority, selectedSource, selectedCity,
+                        if (showFollowUp) followUpHours else 0, followUpMessage,
+                        abTestMessage, aiLanguage, aiTone
                     )
                     viewModel.clearSelectedMedia()
                 },
@@ -805,4 +1037,22 @@ fun CreateCampaignDialog(
             }) { Text("Cancel") }
         }
     )
+
+    if (showSchedulePicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = scheduledDateTime ?: System.currentTimeMillis())
+        DatePickerDialog(
+            onDismissRequest = { showSchedulePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    scheduledDateTime = datePickerState.selectedDateMillis
+                    showSchedulePicker = false
+                }) { Text("Set Date") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSchedulePicker = false }) { Text("Cancel") }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }
