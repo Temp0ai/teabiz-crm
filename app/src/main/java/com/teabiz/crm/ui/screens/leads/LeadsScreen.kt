@@ -236,6 +236,61 @@ fun PriorityBadgeSmall(priority: String) {
 }
 
 @Composable
+fun SourceLogoSmall(source: String) {
+    val bgColor = when (source) {
+        "INDIAMART" -> Color(0xFFE53935)
+        "JUSTDIAL" -> Color(0xFF1565C0)
+        "JSTDL" -> Color(0xFF6A1B9A)
+        "KAGGLE" -> Color(0xFF20BEFF)
+        "GMB" -> Color(0xFF43A047)
+        "WHATSAPP" -> Color(0xFF25D366)
+        "WEBSITE" -> Color(0xFF1976D2)
+        "DEALER" -> Color(0xFFFF8F00)
+        "DISTRIBUTOR" -> Color(0xFF6D4C41)
+        "MACHINE" -> Color(0xFF546E7A)
+        "ORDER" -> Color(0xFF00897B)
+        "REFERRAL" -> Color(0xFFAB47BC)
+        "GMAIL" -> Color(0xFFEA4335)
+        "PHONE" -> Color(0xFF43A047)
+        "EXCEL" -> Color(0xFF2E7D32)
+        else -> TeaGreen
+    }
+    val label = when (source) {
+        "INDIAMART" -> "IM"
+        "JUSTDIAL" -> "JD"
+        "JSTDL" -> "JS"
+        "KAGGLE" -> "KG"
+        "GMB" -> "GMB"
+        "WHATSAPP" -> "WA"
+        "WEBSITE" -> "WEB"
+        "DEALER" -> "DLR"
+        "DISTRIBUTOR" -> "DST"
+        "MACHINE" -> "MCH"
+        "ORDER" -> "ORD"
+        "REFERRAL" -> "REF"
+        "GMAIL" -> "GML"
+        "PHONE" -> "PH"
+        "EXCEL" -> "XLS"
+        else -> "MAN"
+    }
+
+    Surface(
+        shape = MaterialTheme.shapes.small,
+        color = bgColor,
+        modifier = Modifier.size(40.dp)
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = label,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
+    }
+}
+
+@Composable
 fun ScoreBadge(score: Int) {
     Surface(shape = MaterialTheme.shapes.extraSmall, color = TeaGreen.copy(alpha = 0.15f)) {
         Text(
@@ -262,12 +317,8 @@ fun LeadItem(lead: Lead, onClick: () -> Unit, onWhatsApp: () -> Unit = {}, onCal
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                Icons.Default.Person,
-                contentDescription = null,
-                tint = TeaGreen,
-                modifier = Modifier.size(48.dp)
-            )
+            SourceLogoSmall(source = lead.source)
+
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

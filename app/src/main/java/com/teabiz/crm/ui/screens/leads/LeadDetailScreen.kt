@@ -86,12 +86,7 @@ fun LeadDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = TeaGreen,
-                                    modifier = Modifier.size(48.dp)
-                                )
+                                SourceLogo(leadData.source, modifier = Modifier.size(48.dp))
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
@@ -107,7 +102,6 @@ fun LeadDetailScreen(
                                         )
                                     }
                                 }
-                                // Priority Badge
                                 PriorityBadge(priority = leadData.priority)
                             }
 
@@ -396,6 +390,114 @@ fun LeadDetailScreen(
                 showQuotationDialog = false
             }
         )
+    }
+}
+
+@Composable
+fun SourceLogo(source: String, modifier: Modifier = Modifier) {
+    val bgColor: Color
+    val icon: ImageVector
+    val label: String
+
+    when (source) {
+        "INDIAMART" -> {
+            bgColor = Color(0xFFE53935)
+            icon = Icons.Default.Store
+            label = "IM"
+        }
+        "JUSTDIAL" -> {
+            bgColor = Color(0xFF1565C0)
+            icon = Icons.Default.Phone
+            label = "JD"
+        }
+        "JSTDL" -> {
+            bgColor = Color(0xFF6A1B9A)
+            icon = Icons.Default.Phone
+            label = "JS"
+        }
+        "KAGGLE" -> {
+            bgColor = Color(0xFF20BEFF)
+            icon = Icons.Default.DataUsage
+            label = "KG"
+        }
+        "GMB" -> {
+            bgColor = Color(0xFF43A047)
+            icon = Icons.Default.Business
+            label = "GMB"
+        }
+        "WHATSAPP" -> {
+            bgColor = Color(0xFF25D366)
+            icon = Icons.Default.Chat
+            label = "WA"
+        }
+        "WEBSITE" -> {
+            bgColor = Color(0xFF1976D2)
+            icon = Icons.Default.Language
+            label = "WEB"
+        }
+        "DEALER" -> {
+            bgColor = Color(0xFFFF8F00)
+            icon = Icons.Default.ShoppingCart
+            label = "DLR"
+        }
+        "DISTRIBUTOR" -> {
+            bgColor = Color(0xFF6D4C41)
+            icon = Icons.Default.LocalShipping
+            label = "DST"
+        }
+        "MACHINE" -> {
+            bgColor = Color(0xFF546E7A)
+            icon = Icons.Default.Settings
+            label = "MCH"
+        }
+        "ORDER" -> {
+            bgColor = Color(0xFF00897B)
+            icon = Icons.Default.Receipt
+            label = "ORD"
+        }
+        "REFERRAL" -> {
+            bgColor = Color(0xFFAB47BC)
+            icon = Icons.Default.People
+            label = "REF"
+        }
+        "GMAIL" -> {
+            bgColor = Color(0xFFEA4335)
+            icon = Icons.Default.Email
+            label = "GML"
+        }
+        "PHONE" -> {
+            bgColor = Color(0xFF43A047)
+            icon = Icons.Default.Call
+            label = "PH"
+        }
+        "EXCEL" -> {
+            bgColor = Color(0xFF2E7D32)
+            icon = Icons.Default.TableChart
+            label = "XLS"
+        }
+        else -> {
+            bgColor = TeaGreen
+            icon = Icons.Default.Person
+            label = "MAN"
+        }
+    }
+
+    Surface(
+        modifier = modifier,
+        shape = MaterialTheme.shapes.medium,
+        color = bgColor
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Text(
+                text = label,
+                color = Color.White,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.labelSmall
+            )
+        }
     }
 }
 
