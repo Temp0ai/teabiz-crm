@@ -100,10 +100,7 @@ class WhatsAppCatalogViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val finalMessage = _editedMessages.value[productName] ?: message
-                val url = "https://wa.me/$phone?text=${Uri.encode(finalMessage)}"
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
+                com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, phone, finalMessage)
             } catch (e: Exception) {
                 _statusMessage.value = "Error: ${e.message}"
             }
@@ -114,10 +111,7 @@ class WhatsAppCatalogViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val allMessages = _generatedMessages.value.values.joinToString("\n\n---\n\n")
-                val url = "https://wa.me/$phone?text=${Uri.encode(allMessages)}"
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                context.startActivity(intent)
+                com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, phone, allMessages)
             } catch (e: Exception) {
                 _statusMessage.value = "Error: ${e.message}"
             }

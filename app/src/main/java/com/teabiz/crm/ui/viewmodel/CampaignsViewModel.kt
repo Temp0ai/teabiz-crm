@@ -355,10 +355,7 @@ class CampaignsViewModel @Inject constructor(
                     }
 
                     try {
-                        val url = "https://wa.me/$cleanPhone?text=${Uri.encode(personalizedMessage)}"
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        context.startActivity(intent)
+                        com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, lead.phone, personalizedMessage)
 
                         sentCount++
                         sentList.add(contactInfo)
@@ -464,12 +461,7 @@ class CampaignsViewModel @Inject constructor(
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 })
             } catch (e: Exception) {
-                val intent = Intent(Intent.ACTION_VIEW).apply {
-                    val cleanedPhone = phone.replace(Regex("[^0-9]"), "")
-                    data = Uri.parse("https://wa.me/$cleanedPhone?text=${Uri.encode(caption)}")
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                context.startActivity(intent)
+                com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, phone, caption)
             }
         }
     }

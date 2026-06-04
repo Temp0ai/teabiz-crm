@@ -251,6 +251,9 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
                         campaign = campaign,
                         onSend = { viewModel.sendCampaign(campaign.id) },
                         onDelete = { viewModel.deleteCampaign(campaign) },
+                        onPause = { viewModel.pauseCampaign() },
+                        onResume = { viewModel.resumeCampaign() },
+                        onStop = { viewModel.stopCampaign() },
                         onShareMedia = { phone, mediaUri, caption ->
                             viewModel.shareMediaToWhatsApp(phone, mediaUri, caption)
                         }
@@ -277,6 +280,9 @@ fun CampaignItem(
     campaign: Campaign,
     onSend: () -> Unit,
     onDelete: () -> Unit,
+    onPause: () -> Unit = {},
+    onResume: () -> Unit = {},
+    onStop: () -> Unit = {},
     onShareMedia: (String, String, String) -> Unit
 ) {
     var showBatchInfo by remember { mutableStateOf(false) }
@@ -297,6 +303,159 @@ fun CampaignItem(
                 Text(campaign.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 CampaignStatusChip(status = campaign.status)
             }
+
+            if (campaign.targetCategory.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Category, contentDescription = null, tint = CoffeeBrown, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(campaign.targetCategory, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+            }
+
+            if (campaign.targetPriority.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.LocalFireDepartment, contentDescription = null, tint = StatusLost, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Priority: ${campaign.targetPriority}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                }
+            }
+
+            if (campaign.scheduledAt != null) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Schedule, contentDescription = null, tint = StatusFollowUp, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Scheduled: ${SimpleDateFormat("dd MMM, hh:mm a", Locale.getDefault()).format(Date(campaign.scheduledAt))}", style = MaterialTheme.typography.bodySmall, color = StatusFollowUp)
+                }
+            }
+
+            if (campaign.abTestEnabled) {
+                Surface(shape = MaterialTheme.shapes.extraSmall, color = Color(0xFF7C4DFF).copy(alpha = 0.15f)) {
+                    Text("A/B Test", modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp), style = MaterialTheme.typography.labelSmall, color = Color(0xFF7C4DFF))
+                }
+            }
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.ViewModule, contentDescription = null, tint = CoffeeBrown, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Batch size: ${campaign.batchSize}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+
+            if (campaign.mediaUri.isNotBlank()) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Attachment, contentDescription = null, tint = TeaGreen, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Has ${campaign.mediaType} attached", style = MaterialTheme.typography.bodySmall, color = TeaGreen)
+                }
+            }
+
+            Text(
+                text = campaign.messageTemplate.take(100) + if (campaign.messageTemplate.length > 100) "..." else "",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+
+            if (campaign.status == "RUNNING" && campaign.totalBatches > 0) {
+                LinearProgressIndicator(
+                    progress = { campaign.currentBatch.toFloat() / campaign.totalBatches },
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFF25D366)
+                )
+                Text(
+                    "Batch ${campaign.currentBatch}/${campaign.totalBatches} complete",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+            }
+
+            HorizontalDivider()
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(campaign.sentCount.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TeaGreen)
+                    Text("Sent", style = MaterialTheme.typography.labelSmall)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(campaign.failedCount.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = StatusLost)
+                    Text("Failed", style = MaterialTheme.typography.labelSmall)
+                }
+                Column(horizontalAlignment = Alignment.CenterVertically) {
+                    Text(campaign.totalRecipients.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = CoffeeBrown)
+                    Text("Total", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                when (campaign.status) {
+                    "DRAFT", "SCHEDULED" -> {
+                        Button(
+                            onClick = onSend,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
+                        ) {
+                            Icon(Icons.Default.Send, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Send Now")
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = StatusLost)
+                        }
+                    }
+                    "RUNNING" -> {
+                        Button(
+                            onClick = onPause,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800))
+                        ) {
+                            Icon(Icons.Default.Pause, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Pause")
+                        }
+                        Button(
+                            onClick = onStop,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = StatusLost)
+                        ) {
+                            Icon(Icons.Default.Stop, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Stop")
+                        }
+                    }
+                    "PAUSED" -> {
+                        Button(
+                            onClick = onResume,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Resume")
+                        }
+                        Button(
+                            onClick = onStop,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = StatusLost)
+                        ) {
+                            Icon(Icons.Default.Stop, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Stop")
+                        }
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = StatusLost)
+                        }
+                    }
+                    else -> {
+                        IconButton(onClick = onDelete) {
+                            Icon(Icons.Default.Delete, contentDescription = "Delete", tint = StatusLost)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
             if (campaign.targetCategory.isNotBlank()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {

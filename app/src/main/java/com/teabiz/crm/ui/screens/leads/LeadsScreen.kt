@@ -137,9 +137,7 @@ fun LeadsScreen(
                         onWhatsApp = {
                             val phone = lead.phone.replace(Regex("[^0-9+]"), "")
                             val cleanPhone = phone.replace("+", "")
-                            val url = "https://wa.me/$cleanPhone"
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                            context.startActivity(intent)
+                            com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, cleanPhone)
                         },
                         onCall = {
                             val phone = lead.phone.replace(Regex("[^0-9+]"), "")

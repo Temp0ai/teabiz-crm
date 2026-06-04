@@ -183,8 +183,6 @@ object ProductCatalog {
             appendLine("📞 Contact us for orders!")
         }
         val cleanPhone = phone.replace(Regex("[^0-9]"), "")
-        val url = "https://wa.me/$cleanPhone?text=${Uri.encode(message)}"
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        context.startActivity(intent)
+        WhatsAppUtils.openWhatsAppBusiness(context, phone, message)
     }
 }

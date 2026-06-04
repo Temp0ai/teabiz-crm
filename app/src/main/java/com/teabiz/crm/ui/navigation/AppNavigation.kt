@@ -165,7 +165,8 @@ fun AppNavigation(
                     onNavigateToContent = { navController.navigate(Screen.ContentCalendar.route) },
                     onNavigateToGmb = { navController.navigate(Screen.GmbManagement.route) },
                     onNavigateToHashtags = { navController.navigate(Screen.HashtagGenerator.route) },
-                    onNavigateToProductCatalog = { navController.navigate("product_catalog") }
+                    onNavigateToProductCatalog = { navController.navigate("product_catalog") },
+                    onNavigateToAiMedia = { navController.navigate(Screen.AiMediaGenerator.route) }
                 )
             }
 
@@ -272,6 +273,12 @@ fun AppNavigation(
 
             composable("product_catalog") {
                 com.teabiz.crm.ui.screens.marketing.ProductCatalogScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.AiMediaGenerator.route) {
+                com.teabiz.crm.ui.screens.media.AiMediaScreen(
                     onBack = { navController.popBackStack() }
                 )
             }

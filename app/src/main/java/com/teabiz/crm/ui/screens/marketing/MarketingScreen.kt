@@ -25,7 +25,8 @@ fun MarketingScreen(
     onNavigateToContent: () -> Unit,
     onNavigateToGmb: () -> Unit,
     onNavigateToHashtags: () -> Unit = {},
-    onNavigateToProductCatalog: () -> Unit = {}
+    onNavigateToProductCatalog: () -> Unit = {},
+    onNavigateToAiMedia: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -92,6 +93,14 @@ fun MarketingScreen(
             icon = Icons.Default.Inventory2,
             color = CoffeeBrown,
             onClick = onNavigateToProductCatalog
+        )
+
+        MarketingCard(
+            title = "AI Media Generator",
+            description = "Generate video concepts, analyze images, create social posts & product descriptions with AI.",
+            icon = Icons.Default.VideoLibrary,
+            color = Color(0xFF9C27B0),
+            onClick = onNavigateToAiMedia
         )
 
         Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {

@@ -212,10 +212,7 @@ fun LeadDetailScreen(
                             onClick = {
                                 val phone = leadData.phone
                                 if (phone.isNotBlank()) {
-                                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW).apply {
-                                        data = android.net.Uri.parse("https://wa.me/${phone.replace(Regex("[^0-9]"), "")}")
-                                    }
-                                    context.startActivity(intent)
+                                    com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, phone)
                                     scope.launch { leadsViewModel.logActivity(leadId, "WHATSAPP", "Opened WhatsApp chat") }
                                 }
                             },

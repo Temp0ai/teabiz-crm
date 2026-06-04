@@ -30,6 +30,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector,
     object WhatsAppCatalog : Screen("whatsapp_catalog", "Catalog", Icons.Outlined.Store, Icons.Filled.Store)
     object AiSalesDashboard : Screen("ai_sales_dashboard", "AI Assistant", Icons.Outlined.AutoAwesome, Icons.Filled.AutoAwesome)
     object HashtagGenerator : Screen("hashtag_generator", "Hashtags", Icons.Outlined.Tag, Icons.Filled.Tag)
+    object AiMediaGenerator : Screen("ai_media_generator", "Media AI", Icons.Outlined.VideoLibrary, Icons.Filled.VideoLibrary)
 }
 
 data class BottomNavItem(

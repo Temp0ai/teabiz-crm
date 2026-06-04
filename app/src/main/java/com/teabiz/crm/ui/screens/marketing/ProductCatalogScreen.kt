@@ -158,7 +158,7 @@ fun ProductCatalogScreen(
                                         appendLine()
                                         appendLine("📞 Contact us for bulk orders!")
                                     }
-                                    val url = "https://wa.me/?text=${Uri.encode(message)}"
+                                    val url = "https://api.whatsapp.com/send?text=${Uri.encode(message)}"
                                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                                     context.startActivity(intent)
                                 },

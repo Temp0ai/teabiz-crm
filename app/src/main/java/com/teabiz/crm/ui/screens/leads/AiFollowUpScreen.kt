@@ -183,11 +183,7 @@ fun AiFollowUpScreen(
                             Button(
                                 onClick = {
                                     currentLead?.let { lead ->
-                                        val phone = lead.phone.ifBlank { lead.email }
-                                        val cleanPhone = phone.replace(Regex("[^0-9+]"), "")
-                                        val url = "https://wa.me/${cleanPhone.replace("+", "")}?text=${Uri.encode(generatedMessage)}"
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                        context.startActivity(intent)
+                                        com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, lead.phone, generatedMessage)
                                     }
                                 },
                                 modifier = Modifier.weight(1f),
