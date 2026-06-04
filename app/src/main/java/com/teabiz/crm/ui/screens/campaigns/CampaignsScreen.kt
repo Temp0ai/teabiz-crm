@@ -28,7 +28,7 @@ import com.teabiz.crm.ui.viewmodel.CampaignsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CampaignsScreen(viewModel: CampaignsViewModel) {
+fun CampaignsScreen(viewModel: CampaignsViewModel, onNavigateToBot: () -> Unit = {}) {
     var showCreateDialog by remember { mutableStateOf(false) }
     val campaigns by viewModel.campaigns.collectAsState()
     val campaignState by viewModel.campaignState.collectAsState()
