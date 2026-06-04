@@ -16,6 +16,8 @@ class GeminiService @Inject constructor() {
 
     fun isConfigured(): Boolean = apiKey.isNotBlank()
 
+    fun getApiKey(): String = apiKey
+
     suspend fun generateTrendyHashtags(
         productType: String,
         platform: String,

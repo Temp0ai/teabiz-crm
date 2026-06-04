@@ -1,6 +1,7 @@
 package com.teabiz.crm.di
 
 import com.teabiz.crm.data.remote.AiService
+import com.teabiz.crm.data.remote.AiSalesAssistant
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.remote.WhatsAppCatalogFetcher
 import com.teabiz.crm.data.remote.SEOService
@@ -60,5 +61,11 @@ object NetworkModule {
     @Singleton
     fun provideWhatsAppCatalogFetcher(okHttpClient: OkHttpClient): WhatsAppCatalogFetcher {
         return WhatsAppCatalogFetcher(okHttpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAiSalesAssistant(geminiService: GeminiService): AiSalesAssistant {
+        return AiSalesAssistant(geminiService)
     }
 }

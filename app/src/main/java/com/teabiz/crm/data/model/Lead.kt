@@ -31,7 +31,14 @@ data class Lead(
     val priority: String = "NORMAL",
     val nextFollowUpAt: Long? = null,
     val dealValue: Double = 0.0,
-    val assignedTo: String = ""
+    val assignedTo: String = "",
+    val conversionProbability: Int = 0,
+    val bestTimeToContact: String = "",
+    val estimatedLtv: Double = 0.0,
+    val churnRisk: Int = 0,
+    val aiInsights: String = "",
+    val lastAiAnalysisAt: Long? = null,
+    val responsePattern: String = ""
 )
 
 @Entity(tableName = "lead_activities")

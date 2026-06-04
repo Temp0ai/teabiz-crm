@@ -21,7 +21,8 @@ import com.teabiz.crm.ui.viewmodel.DashboardViewModel
 fun DashboardScreen(
     viewModel: DashboardViewModel,
     onNavigateToLeads: () -> Unit,
-    onNavigateToImport: () -> Unit
+    onNavigateToImport: () -> Unit,
+    onNavigateToAiDashboard: () -> Unit = {}
 ) {
     val leadCount by viewModel.totalLeads.collectAsState()
     val newLeadCount by viewModel.newLeadCount.collectAsState()
@@ -143,6 +144,15 @@ fun DashboardScreen(
                             Icon(Icons.Default.FileUpload, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Import")
+                        }
+                        Button(
+                            onClick = onNavigateToAiDashboard,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C4DFF))
+                        ) {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("AI Assistant")
                         }
                         OutlinedButton(
                             onClick = onNavigateToLeads,

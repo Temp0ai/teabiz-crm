@@ -33,6 +33,7 @@ import com.teabiz.crm.ui.screens.marketing.ContentCalendarScreen
 import com.teabiz.crm.ui.screens.marketing.GmbScreen
 import com.teabiz.crm.ui.screens.settings.SettingsScreen
 import com.teabiz.crm.ui.screens.whatsapp.WhatsAppCatalogScreen
+import com.teabiz.crm.ui.screens.ai.AiSalesDashboardScreen
 import com.teabiz.crm.ui.theme.TeaGreen
 import com.teabiz.crm.ui.viewmodel.*
 
@@ -61,6 +62,7 @@ fun AppNavigation(
         route.startsWith("ai_followup") ||
         route.startsWith("gmail_import") ||
         route.startsWith("whatsapp_catalog") ||
+        route.startsWith("ai_sales_dashboard") ||
         route.startsWith("seo_tools") ||
         route.startsWith("competitor") ||
         route.startsWith("content_calendar") ||
@@ -126,7 +128,8 @@ fun AppNavigation(
                 DashboardScreen(
                     viewModel = dashboardViewModel,
                     onNavigateToLeads = { navController.navigate(Screen.Leads.route) },
-                    onNavigateToImport = { navController.navigate(Screen.Import.route) }
+                    onNavigateToImport = { navController.navigate(Screen.Import.route) },
+                    onNavigateToAiDashboard = { navController.navigate(Screen.AiSalesDashboard.route) }
                 )
             }
 
@@ -256,6 +259,13 @@ fun AppNavigation(
                 val whatsappCatalogViewModel: com.teabiz.crm.ui.viewmodel.WhatsAppCatalogViewModel = androidx.hilt.navigation.compose.hiltViewModel()
                 WhatsAppCatalogScreen(
                     viewModel = whatsappCatalogViewModel,
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.AiSalesDashboard.route) {
+                AiSalesDashboardScreen(
+                    leadsViewModel = leadsViewModel,
                     onBack = { navController.popBackStack() }
                 )
             }
