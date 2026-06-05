@@ -155,7 +155,7 @@ private fun CreateOfferTab(viewModel: WhatsAppOfferViewModel) {
     var product by remember { mutableStateOf("Tea Premix") }
     var discount by remember { mutableStateOf("10%") }
     var catalogLink by remember { mutableStateOf("https://wa.me/c/917020134619") }
-    var gmbAddress by remember { mutableStateOf("123 Business Park, Mumbai, India") }
+    var gmbAddress by remember { mutableStateOf("Arihant Enterprises Mfg/ Export") }
     var phoneNumber by remember { mutableStateOf("917020134619") }
     var language by remember { mutableStateOf("English") }
     var tone by remember { mutableStateOf("Professional") }
@@ -283,7 +283,7 @@ private fun BulkSendTab(
     var product by remember { mutableStateOf("Tea Premix") }
     var discount by remember { mutableStateOf("10%") }
     var catalogLink by remember { mutableStateOf("https://wa.me/c/917020134619") }
-    var gmbAddress by remember { mutableStateOf("123 Business Park, Mumbai, India") }
+    var gmbAddress by remember { mutableStateOf("Arihant Enterprises Mfg/ Export") }
     var phoneNumber by remember { mutableStateOf("917020134619") }
     var contactText by remember { mutableStateOf("") }
 
