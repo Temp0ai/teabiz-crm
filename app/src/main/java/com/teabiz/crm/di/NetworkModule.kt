@@ -9,6 +9,7 @@ import com.teabiz.crm.data.remote.GeminiImageGenerator
 import com.teabiz.crm.data.remote.Veo3Service
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.remote.WhatsAppCatalogFetcher
+import com.teabiz.crm.data.remote.WhatsAppCatalogOfferSender
 import com.teabiz.crm.data.remote.SEOService
 import com.teabiz.crm.data.remote.GeminiService
 import dagger.Module
@@ -97,5 +98,15 @@ object NetworkModule {
     @Singleton
     fun provideVeo3Service(@ApplicationContext context: Context): Veo3Service {
         return Veo3Service(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWhatsAppCatalogOfferSender(
+        @ApplicationContext context: Context,
+        geminiService: GeminiService,
+        okHttpClient: OkHttpClient
+    ): WhatsAppCatalogOfferSender {
+        return WhatsAppCatalogOfferSender(context, geminiService, okHttpClient)
     }
 }

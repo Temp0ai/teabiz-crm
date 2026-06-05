@@ -154,7 +154,8 @@ fun AppNavigation(
             composable(Screen.Campaigns.route) {
                 CampaignsScreen(
                     viewModel = campaignsViewModel,
-                    onNavigateToWhatsAppWeb = { navController.navigate(Screen.WhatsAppWeb.route) }
+                    onNavigateToWhatsAppWeb = { navController.navigate(Screen.WhatsAppWeb.route) },
+                    onNavigateToWhatsAppOffer = { navController.navigate(Screen.WhatsAppOffer.route) }
                 )
             }
 
@@ -293,6 +294,12 @@ fun AppNavigation(
 
             composable(Screen.WhatsAppWeb.route) {
                 com.teabiz.crm.ui.screens.whatsapp.WhatsAppWebScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(Screen.WhatsAppOffer.route) {
+                com.teabiz.crm.ui.screens.whatsapp.WhatsAppOfferScreen(
                     onBack = { navController.popBackStack() }
                 )
             }
