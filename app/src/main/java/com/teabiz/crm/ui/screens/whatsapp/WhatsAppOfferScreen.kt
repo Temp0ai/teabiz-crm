@@ -335,13 +335,13 @@ private fun EditOfferTab(
             
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(
-                    onClick = { editedMessage += "\n\n🎉 *FREE DELIVERY on orders above ₹5000!*",
+                    onClick = { editedMessage += "\n\n🎉 *FREE DELIVERY on orders above ₹5000!*" },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Free Delivery", style = MaterialTheme.typography.labelSmall)
                 }
                 OutlinedButton(
-                    onClick = { editedMessage += "\n\n⏰ *Offer valid till Sunday!*",
+                    onClick = { editedMessage += "\n\n⏰ *Offer valid till Sunday!*" },
                     modifier = Modifier.weight(1f)
                 ) {
                     Text("Urgency", style = MaterialTheme.typography.labelSmall)
