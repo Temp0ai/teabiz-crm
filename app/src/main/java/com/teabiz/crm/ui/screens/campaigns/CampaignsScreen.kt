@@ -28,7 +28,10 @@ import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CampaignsScreen(viewModel: CampaignsViewModel) {
+fun CampaignsScreen(
+    viewModel: CampaignsViewModel,
+    onNavigateToWhatsAppWeb: () -> Unit = {}
+) {
     var showCreateDialog by remember { mutableStateOf(false) }
     val campaigns by viewModel.campaigns.collectAsState()
     val campaignState by viewModel.campaignState.collectAsState()
@@ -59,11 +62,21 @@ fun CampaignsScreen(viewModel: CampaignsViewModel) {
                         fontWeight = FontWeight.Bold
                     )
                 }
-            FloatingActionButton(
-                onClick = { showCreateDialog = true },
-                containerColor = TeaGreen
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Create Campaign")
+            Row {
+                IconButton(onClick = onNavigateToWhatsAppWeb) {
+                    Icon(
+                        Icons.Default.Language,
+                        contentDescription = "WhatsApp Web",
+                        tint = Color(0xFF25D366),
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                FloatingActionButton(
+                    onClick = { showCreateDialog = true },
+                    containerColor = TeaGreen
+                ) {
+                    Icon(Icons.Default.Add, contentDescription = "Create Campaign")
+                }
             }
         }
 

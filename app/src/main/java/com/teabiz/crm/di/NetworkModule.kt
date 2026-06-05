@@ -5,6 +5,8 @@ import com.teabiz.crm.data.remote.AiService
 import com.teabiz.crm.data.remote.AiSalesAssistant
 import com.teabiz.crm.data.remote.AiMediaGenerator
 import com.teabiz.crm.data.remote.AiVideoGenerator
+import com.teabiz.crm.data.remote.GeminiImageGenerator
+import com.teabiz.crm.data.remote.Veo3Service
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.remote.WhatsAppCatalogFetcher
 import com.teabiz.crm.data.remote.SEOService
@@ -83,5 +85,17 @@ object NetworkModule {
     @Singleton
     fun provideAiVideoGenerator(@ApplicationContext context: Context, geminiService: GeminiService): AiVideoGenerator {
         return AiVideoGenerator(context, geminiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGeminiImageGenerator(@ApplicationContext context: Context, geminiService: GeminiService): GeminiImageGenerator {
+        return GeminiImageGenerator(context, geminiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideVeo3Service(@ApplicationContext context: Context): Veo3Service {
+        return Veo3Service(context)
     }
 }

@@ -1,5 +1,6 @@
 package com.teabiz.crm.ui.screens.settings
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -8,11 +9,13 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.teabiz.crm.data.remote.GeminiService
 import com.teabiz.crm.ui.theme.*
 import com.teabiz.crm.ui.viewmodel.SettingsViewModel
 
@@ -20,13 +23,12 @@ import com.teabiz.crm.ui.viewmodel.SettingsViewModel
 @Composable
 fun SettingsScreen(viewModel: SettingsViewModel) {
     val apiKey by viewModel.apiKey.collectAsState()
-    val aiModel by viewModel.aiModel.collectAsState()
+    val selectedModel by viewModel.selectedModel.collectAsState()
     val messageTone by viewModel.messageTone.collectAsState()
     val whatsappApiUrl by viewModel.whatsappApiUrl.collectAsState()
     val businessName by viewModel.businessName.collectAsState()
 
     var editApiKey by remember(apiKey) { mutableStateOf(apiKey) }
-    var editAiModel by remember(aiModel) { mutableStateOf(aiModel) }
     var editMessageTone by remember(messageTone) { mutableStateOf(messageTone) }
     var editWhatsappUrl by remember(whatsappApiUrl) { mutableStateOf(whatsappApiUrl) }
     var editBusinessName by remember(businessName) { mutableStateOf(businessName) }
@@ -93,12 +95,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             ) {
                 Text("AI Settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
 
-                SettingsTextField(
-                    value = editAiModel,
-                    onValueChange = { editAiModel = it },
-                    label = "AI Model",
-                    icon = Icons.Default.AutoAwesome,
-                    placeholder = "gpt-4, gpt-3.5-turbo"
+                ModelSelector(
+                    selectedModel = selectedModel,
+                    onModelSelected = { viewModel.setModel(it) }
                 )
 
                 Text("Message Tone", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
@@ -123,7 +122,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text("About", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                SettingsRow(icon = Icons.Default.Info, title = "App Version", subtitle = "1.0.0")
+                SettingsRow(icon = Icons.Default.Info, title = "App Version", subtitle = "1.3.8")
                 SettingsRow(icon = Icons.Default.Security, title = "Privacy Policy", subtitle = "View policy")
                 SettingsRow(icon = Icons.Default.Description, title = "Terms of Service", subtitle = "View terms")
             }
@@ -133,7 +132,7 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
             onClick = {
                 viewModel.saveAll(
                     apiKey = editApiKey,
-                    aiModel = editAiModel,
+                    selectedModel = selectedModel,
                     messageTone = editMessageTone,
                     whatsappApiUrl = editWhatsappUrl,
                     businessName = editBusinessName
@@ -148,6 +147,66 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ModelSelector(
+    selectedModel: String,
+    onModelSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val models = GeminiService.AVAILABLE_MODELS
+    val selectedName = models.find { it.first == selectedModel }?.second ?: "Gemini 2.0 Flash"
+
+    Column {
+        Text("AI Model", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(4.dp))
+        
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it }
+        ) {
+            OutlinedTextField(
+                value = selectedName,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                leadingIcon = { Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color(0xFF7C4DFF)) }
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                models.forEach { (modelId, modelName) ->
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(modelName)
+                                Text(
+                                    modelId,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Gray
+                                )
+                            }
+                        },
+                        onClick = {
+                            onModelSelected(modelId)
+                            expanded = false
+                        },
+                        leadingIcon = {
+                            if (modelId == selectedModel) {
+                                Icon(Icons.Default.Check, contentDescription = null, tint = TeaGreen)
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 }
 

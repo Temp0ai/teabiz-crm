@@ -9,14 +9,55 @@ import javax.inject.Singleton
 class GeminiService @Inject constructor() {
 
     private var apiKey: String = ""
+    private var selectedModel: String = MODEL_GEMINI_FLASH
+
+    companion object {
+        const val MODEL_GEMINI_PRO = "gemini-2.0-flash"
+        const val MODEL_GEMINI_FLASH = "gemini-1.5-flash"
+        const val MODEL_GEMINI_LITE = "gemini-1.5-flash-8b"
+        const val MODEL_GEMINI_25_PRO = "gemini-2.5-pro-preview-05-06"
+        const val MODEL_GEMINI_25_FLASH = "gemini-2.5-flash-preview-04-17"
+
+        val AVAILABLE_MODELS = listOf(
+            MODEL_GEMINI_25_PRO to "Gemini 2.5 Pro (Best Quality)",
+            MODEL_GEMINI_25_FLASH to "Gemini 2.5 Flash (Fast + Smart)",
+            MODEL_GEMINI_PRO to "Gemini 2.0 Flash (Fastest)",
+            MODEL_GEMINI_FLASH to "Gemini 1.5 Flash (Reliable)",
+            MODEL_GEMINI_LITE to "Gemini 1.5 Flash 8B (Lightweight)"
+        )
+    }
 
     fun configure(apiKey: String) {
         this.apiKey = apiKey
     }
 
+    fun setModel(model: String) {
+        this.selectedModel = model
+    }
+
+    fun getSelectedModel(): String = selectedModel
+
     fun isConfigured(): Boolean = apiKey.isNotBlank()
 
     fun getApiKey(): String = apiKey
+
+    fun getModelName(): String {
+        return AVAILABLE_MODELS.find { it.first == selectedModel }?.second ?: selectedModel
+    }
+
+    private fun getModel(): GenerativeModel {
+        return GenerativeModel(
+            modelName = selectedModel,
+            apiKey = apiKey
+        )
+    }
+
+    private fun getModel(modelName: String): GenerativeModel {
+        return GenerativeModel(
+            modelName = modelName,
+            apiKey = apiKey
+        )
+    }
 
     suspend fun generateTrendyHashtags(
         productType: String,
@@ -26,10 +67,7 @@ class GeminiService @Inject constructor() {
         if (!isConfigured()) return ""
 
         return try {
-            val model = GenerativeModel(
-                modelName = "gemini-1.5-flash",
-                apiKey = apiKey
-            )
+            val model = getModel()
 
             val prompt = buildString {
                 appendLine("You are the TOP social media marketing expert for Indian tea/coffee/vending machine businesses in 2025-2026.")
@@ -88,10 +126,7 @@ class GeminiService @Inject constructor() {
         if (!isConfigured()) return ""
 
         return try {
-            val model = GenerativeModel(
-                modelName = "gemini-1.5-flash",
-                apiKey = apiKey
-            )
+            val model = getModel()
 
             val prompt = buildString {
                 appendLine("You are a sales expert for Indian tea/coffee/vending machine business.")
@@ -112,6 +147,18 @@ class GeminiService @Inject constructor() {
                 appendLine("MESSAGE:")
             }
 
+            val response = model.generateContent(prompt)
+            response.text?.trim() ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+    }
+
+    suspend fun generateContent(prompt: String): String {
+        if (!isConfigured()) return ""
+
+        return try {
+            val model = getModel()
             val response = model.generateContent(prompt)
             response.text?.trim() ?: ""
         } catch (e: Exception) {
