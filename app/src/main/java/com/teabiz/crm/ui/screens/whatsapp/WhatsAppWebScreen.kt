@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
+@SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WhatsAppWebScreen(
@@ -93,7 +94,6 @@ fun WhatsAppWebScreen(
 
             AndroidView(
                 factory = { context ->
-                    @SuppressLint("SetJavaScriptEnabled")
                     WebView(context).apply {
                         webView = this
                         
