@@ -2,6 +2,7 @@ package com.teabiz.crm.ui.screens.whatsapp
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,6 +18,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.teabiz.crm.data.remote.WhatsAppCatalogOfferSender.CatalogProduct
 import com.teabiz.crm.ui.viewmodel.WhatsAppOfferViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,7 +34,7 @@ fun WhatsAppOfferScreen(
     val statusMessage by viewModel.statusMessage.collectAsState()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("Catalog", "Create Offer", "Bulk Send")
+    val tabs = listOf("Catalog", "Create Offer", "Edit Offer", "Bulk Send")
 
     Scaffold(
         topBar = {
@@ -70,7 +72,8 @@ fun WhatsAppOfferScreen(
                 when (selectedTab) {
                     0 -> CatalogTab(catalogProducts, viewModel)
                     1 -> CreateOfferTab(viewModel)
-                    2 -> BulkSendTab(bulkMessages, viewModel)
+                    2 -> EditOfferTab(generatedOffer, viewModel)
+                    3 -> BulkSendTab(bulkMessages, viewModel)
                 }
             }
         }
@@ -155,7 +158,7 @@ private fun CreateOfferTab(viewModel: WhatsAppOfferViewModel) {
     var product by remember { mutableStateOf("Tea Premix") }
     var discount by remember { mutableStateOf("10%") }
     var catalogLink by remember { mutableStateOf("https://wa.me/c/917020134619") }
-    var gmbAddress by remember { mutableStateOf("Arihant Enterprises Mfg/ Export") }
+    var gmbAddress by remember { mutableStateOf("Arihant Enterprises Mfg/ Export tea & coffee premix") }
     var phoneNumber by remember { mutableStateOf("917020134619") }
     var language by remember { mutableStateOf("English") }
     var tone by remember { mutableStateOf("Professional") }
@@ -275,17 +278,12 @@ private fun CreateOfferTab(viewModel: WhatsAppOfferViewModel) {
 }
 
 @Composable
-private fun BulkSendTab(
-    bulkMessages: List<Triple<String, String, String>>,
+private fun EditOfferTab(
+    offer: com.teabiz.crm.data.remote.WhatsAppCatalogOfferSender.OfferMessage?,
     viewModel: WhatsAppOfferViewModel
 ) {
     val context = LocalContext.current
-    var product by remember { mutableStateOf("Tea Premix") }
-    var discount by remember { mutableStateOf("10%") }
-    var catalogLink by remember { mutableStateOf("https://wa.me/c/917020134619") }
-    var gmbAddress by remember { mutableStateOf("Arihant Enterprises Mfg/ Export") }
-    var phoneNumber by remember { mutableStateOf("917020134619") }
-    var contactText by remember { mutableStateOf("") }
+    var editedMessage by remember(offer) { mutableStateOf(offer?.message ?: "") }
 
     Column(
         modifier = Modifier
@@ -293,58 +291,342 @@ private fun BulkSendTab(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        Text("Bulk Send with Catalog + Address", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Edit AI Generated Offer", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        OutlinedTextField(
-            value = contactText,
-            onValueChange = { contactText = it },
-            label = { Text("Contacts (Name, Phone per line)") },
-            placeholder = { Text("John, 919876543210\nJane, 919876543211") },
-            modifier = Modifier.fillMaxHeight(0.3f).fillMaxWidth(),
-            maxLines = 10
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        if (offer == null) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(48.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("No offer generated yet", color = Color.Gray)
+                    Text("Go to 'Create Offer' tab to generate one", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        } else {
+            offer.title.let { title ->
+                Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF25D366).copy(alpha = 0.1f))) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Title: $title", fontWeight = FontWeight.Bold)
+                        if (offer.discount.isNotBlank()) Text("Discount: ${offer.discount}")
+                        if (offer.catalogLink.isNotBlank()) Text("Catalog: ${offer.catalogLink}")
+                        if (offer.gmbAddress.isNotBlank()) Text("Address: ${offer.gmbAddress}")
+                        if (offer.phoneNumber.isNotBlank()) Text("Phone: ${offer.phoneNumber}")
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            OutlinedTextField(
+                value = editedMessage,
+                onValueChange = { editedMessage = it },
+                label = { Text("Edit Message") },
+                modifier = Modifier.fillMaxWidth().heightIn(min = 200.dp),
+                maxLines = 20
+            )
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Quick edit buttons
+            Text("Quick Add:", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { editedMessage += "\n\n🎉 *FREE DELIVERY on orders above ₹5000!*",
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Free Delivery", style = MaterialTheme.typography.labelSmall)
+                }
+                OutlinedButton(
+                    onClick = { editedMessage += "\n\n⏰ *Offer valid till Sunday!*",
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Urgency", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { editedMessage += "\n\n📞 *Call now: ${offer.phoneNumber}*" },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Add Phone", style = MaterialTheme.typography.labelSmall)
+                }
+                OutlinedButton(
+                    onClick = { editedMessage += "\n\n📍 ${offer.gmbAddress}" },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Add Address", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { editedMessage += "\n\n🛒 *View Catalog:* ${offer.catalogLink}" },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Add Catalog", style = MaterialTheme.typography.labelSmall)
+                }
+                OutlinedButton(
+                    onClick = { editedMessage += "\n\n✅ *FSSAI Certified*\n✅ *ISO Certified*" },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Add Trust", style = MaterialTheme.typography.labelSmall)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // Preview
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text("Preview", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(editedMessage)
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        val cleanPhone = offer.phoneNumber.replace(Regex("[^0-9]"), "")
+                        val url = "https://wa.me/$cleanPhone?text=${Uri.encode(editedMessage)}"
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Send")
+                }
+                OutlinedButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                        val clip = android.content.ClipData.newPlainText("Offer", editedMessage)
+                        clipboard.setPrimaryClip(clip)
+                        android.widget.Toast.makeText(context, "Copied!", android.widget.Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Copy")
+                }
+                OutlinedButton(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, editedMessage)
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Share"))
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Share")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun BulkSendTab(
+    bulkMessages: List<Triple<String, String, String>>,
+    viewModel: WhatsAppOfferViewModel
+) {
+    val context = LocalContext.current
+    val catalogProducts by viewModel.catalogProducts.collectAsState()
+    var businessPhone by remember { mutableStateOf("917020134619") }
+    var product by remember { mutableStateOf("Tea Premix") }
+    var discount by remember { mutableStateOf("10%") }
+    var catalogLink by remember { mutableStateOf("https://wa.me/c/917020134619") }
+    var gmbAddress by remember { mutableStateOf("Arihant Enterprises Mfg/ Export tea & coffee premix") }
+    var phoneNumber by remember { mutableStateOf("917020134619") }
+    var contactText by remember { mutableStateOf("") }
+    var selectedProduct by remember { mutableStateOf<CatalogProduct?>(null) }
+    var includeImages by remember { mutableStateOf(true) }
+    var includeAddress by remember { mutableStateOf(true) }
+    var includeCatalogLink by remember { mutableStateOf(true) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
+    ) {
+        Text("Bulk Send with AI Offers", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Text("Fetch catalog, AI generates offers with images & address", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         
-        OutlinedTextField(
-            value = product,
-            onValueChange = { product = it },
-            label = { Text("Product") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
         
-        OutlinedTextField(
-            value = discount,
-            onValueChange = { discount = it },
-            label = { Text("Discount") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        OutlinedTextField(
-            value = catalogLink,
-            onValueChange = { catalogLink = it },
-            label = { Text("Catalog Link") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        OutlinedTextField(
-            value = gmbAddress,
-            onValueChange = { gmbAddress = it },
-            label = { Text("GMB Address") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Your Phone") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        // Fetch Catalog Section
+        Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = Color(0xFF25D366).copy(alpha = 0.1f))) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("Step 1: Fetch Catalog", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = businessPhone,
+                    onValueChange = { businessPhone = it },
+                    label = { Text("Business Phone") },
+                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = { viewModel.fetchCatalog(businessPhone) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
+                ) {
+                    Icon(Icons.Default.Refresh, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Fetch Catalog Products")
+                }
+            }
+        }
+
+        // Show fetched products
+        if (catalogProducts.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(12.dp))
+            Text("${catalogProducts.size} Products Found:", fontWeight = FontWeight.Bold)
+            
+            catalogProducts.take(6).forEach { catalogProduct ->
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp).clickable {
+                        selectedProduct = catalogProduct
+                        product = catalogProduct.name
+                        catalogLink = "https://wa.me/c/${businessPhone.replace(Regex("[^0-9]"), "")}"
+                    },
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (selectedProduct == catalogProduct) Color(0xFF25D366).copy(alpha = 0.2f) else Color.White
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(8.dp).fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(catalogProduct.name, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                            Text(catalogProduct.price, color = Color(0xFF25D366), style = MaterialTheme.typography.labelSmall)
+                        }
+                        if (selectedProduct == catalogProduct) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF25D366))
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Offer Details
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("Step 2: Offer Details", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = product,
+                    onValueChange = { product = it },
+                    label = { Text("Product") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = discount,
+                    onValueChange = { discount = it },
+                    label = { Text("Discount") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = catalogLink,
+                    onValueChange = { catalogLink = it },
+                    label = { Text("Catalog Link") },
+                    leadingIcon = { Icon(Icons.Default.Link, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = gmbAddress,
+                    onValueChange = { gmbAddress = it },
+                    label = { Text("GMB Address") },
+                    leadingIcon = { Icon(Icons.Default.LocationOn, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Phone Number") },
+                    leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Include Options
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("Include in Message:", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    FilterChip(
+                        selected = includeImages,
+                        onClick = { includeImages = !includeImages },
+                        label = { Text("Catalog Images") }
+                    )
+                    FilterChip(
+                        selected = includeAddress,
+                        onClick = { includeAddress = !includeAddress },
+                        label = { Text("GMB Address") }
+                    )
+                    FilterChip(
+                        selected = includeCatalogLink,
+                        onClick = { includeCatalogLink = !includeCatalogLink },
+                        label = { Text("Catalog Link") }
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Contacts
+        Card(modifier = Modifier.fillMaxWidth()) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text("Step 3: Add Contacts", fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = contactText,
+                    onValueChange = { contactText = it },
+                    label = { Text("Contacts (Name, Phone per line)") },
+                    placeholder = { Text("John, 919876543210\nJane, 919876543211") },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 100.dp),
+                    maxLines = 10
+                )
+            }
+        }
         
         Spacer(modifier = Modifier.height(16.dp))
         
@@ -363,7 +645,7 @@ private fun BulkSendTab(
         ) {
             Icon(Icons.Default.AutoAwesome, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Generate Bulk Messages")
+            Text("Generate AI Bulk Messages")
         }
 
         if (bulkMessages.isNotEmpty()) {
@@ -378,37 +660,67 @@ private fun BulkSendTab(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(name, fontWeight = FontWeight.Bold)
                                 Text(phone, color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                             }
-                            Button(
-                                onClick = { viewModel.openWhatsApp(phone, message) },
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
-                            ) {
-                                Icon(Icons.Default.Send, contentDescription = null)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Send")
+                            Row {
+                                IconButton(onClick = {
+                                    val clipboard = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                    val clip = android.content.ClipData.newPlainText("Message", message)
+                                    clipboard.setPrimaryClip(clip)
+                                    android.widget.Toast.makeText(context, "Copied!", android.widget.Toast.LENGTH_SHORT).show()
+                                }) {
+                                    Icon(Icons.Default.ContentCopy, contentDescription = "Copy", tint = Color(0xFF7C4DFF))
+                                }
+                                IconButton(onClick = { viewModel.openWhatsApp(phone, message) }) {
+                                    Icon(Icons.Default.Send, contentDescription = "Send", tint = Color(0xFF25D366))
+                                }
                             }
                         }
+                        // Show preview
+                        Text(
+                            message.take(100) + if (message.length > 100) "..." else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.Gray
+                        )
                     }
                 }
             }
             
             Spacer(modifier = Modifier.height(12.dp))
             
-            Button(
-                onClick = {
-                    bulkMessages.forEach { (_, phone, message) ->
-                        viewModel.openWhatsApp(phone, message)
-                    }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C4DFF))
-            ) {
-                Icon(Icons.Default.Send, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Send All (${bulkMessages.size})")
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = {
+                        bulkMessages.forEach { (_, phone, message) ->
+                            viewModel.openWhatsApp(phone, message)
+                        }
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF7C4DFF))
+                ) {
+                    Icon(Icons.Default.Send, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Send All")
+                }
+                OutlinedButton(
+                    onClick = {
+                        val allMessages = bulkMessages.joinToString("\n\n---\n\n") { (name, phone, msg) ->
+                            "To: $name ($phone)\n\n$msg"
+                        }
+                        val intent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, allMessages)
+                        }
+                        context.startActivity(Intent.createChooser(intent, "Share All"))
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Share All")
+                }
             }
         }
     }
