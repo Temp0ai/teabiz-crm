@@ -63,12 +63,6 @@ class Veo3Service @Inject constructor(
             free = true
         ),
         VideoPlatform(
-            name = "InVideo AI",
-            url = "https://invideo.io",
-            description = "AI video generation from text",
-            free = true
-        ),
-        VideoPlatform(
             name = "Synthesia",
             url = "https://synthesia.io",
             description = "AI avatar video generation",

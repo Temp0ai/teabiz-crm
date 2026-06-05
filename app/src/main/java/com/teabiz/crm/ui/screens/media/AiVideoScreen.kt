@@ -241,17 +241,6 @@ private fun VideoScriptTab(
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Clipchamp")
                         }
-                        OutlinedButton(
-                            onClick = {
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://invideo.io"))
-                                context.startActivity(intent)
-                            },
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.AutoAwesome, contentDescription = null)
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("InVideo AI")
-                        }
                     }
                 }
             }
