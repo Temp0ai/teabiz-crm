@@ -30,7 +30,6 @@ import java.util.*
 @Composable
 fun CampaignsScreen(
     viewModel: CampaignsViewModel,
-    onNavigateToWhatsAppWeb: () -> Unit = {},
     onNavigateToWhatsAppOffer: () -> Unit = {}
 ) {
     var showCreateDialog by remember { mutableStateOf(false) }
@@ -64,14 +63,6 @@ fun CampaignsScreen(
                     )
                 }
             Row {
-                IconButton(onClick = onNavigateToWhatsAppWeb) {
-                    Icon(
-                        Icons.Default.Language,
-                        contentDescription = "WhatsApp Web",
-                        tint = Color(0xFF25D366),
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
                 IconButton(onClick = onNavigateToWhatsAppOffer) {
                     Icon(
                         Icons.Default.Storefront,
