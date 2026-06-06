@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -85,7 +86,7 @@ fun DashboardScreen(
                     modifier = Modifier.weight(1f),
                     title = "Follow-up",
                     value = followUpCount.toString(),
-                    icon = Icons.Default.FollowTheSigns,
+                    icon = Icons.AutoMirrored.Filled.FollowTheSigns,
                     color = StatusFollowUp
                 )
                 StatCard(
@@ -114,7 +115,7 @@ fun DashboardScreen(
                     modifier = Modifier.weight(1f),
                     title = "Win Rate",
                     value = if (leadCount > 0) "${(convertedCount * 100 / leadCount)}%" else "0%",
-                    icon = Icons.Default.TrendingUp,
+                    icon = Icons.AutoMirrored.Filled.TrendingUp,
                     color = CoffeeBrown
                 )
             }

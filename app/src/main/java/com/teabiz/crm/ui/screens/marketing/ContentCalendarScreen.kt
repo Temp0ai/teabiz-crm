@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,7 +33,7 @@ fun ContentCalendarScreen(
                 title = { Text("Content Calendar") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -148,7 +149,7 @@ fun PlatformIcon(platform: String) {
         "instagram" -> Icons.Default.Share to Color(0xFFE4405F)
         "facebook" -> Icons.Default.Public to Color(0xFF1877F2)
         "linkedin" -> Icons.Default.Public to Color(0xFF0A66C2)
-        "twitter" -> Icons.Default.Chat to Color(0xFF1DA1F2)
+        "twitter" -> Icons.AutoMirrored.Filled.Chat to Color(0xFF1DA1F2)
         else -> Icons.Default.Public to Color.Gray
     }
     Icon(icon, contentDescription = platform, tint = color, modifier = Modifier.size(24.dp))

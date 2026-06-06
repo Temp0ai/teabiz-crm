@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -57,7 +58,7 @@ fun LeadDetailScreen(
                 title = { Text("Lead Detail") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -219,7 +220,7 @@ fun LeadDetailScreen(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366))
                         ) {
-                            Icon(Icons.Default.Chat, contentDescription = null)
+                            Icon(Icons.AutoMirrored.Filled.Chat, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("WhatsApp")
                         }
@@ -260,7 +261,7 @@ fun LeadDetailScreen(
                             onClick = { showAddActivityDialog = true },
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.NoteAdd, contentDescription = null)
+                            Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Add Note")
                         }
@@ -424,7 +425,7 @@ fun SourceLogo(source: String, modifier: Modifier = Modifier) {
         }
         "WHATSAPP" -> {
             bgColor = Color(0xFF25D366)
-            icon = Icons.Default.Chat
+            icon = Icons.AutoMirrored.Filled.Chat
             label = "WA"
         }
         "WEBSITE" -> {
@@ -536,10 +537,10 @@ fun PriorityBadge(priority: String) {
 fun ActivityItem(activity: LeadActivity) {
     val icon = when (activity.type) {
         "CALL" -> Icons.Default.Call
-        "WHATSAPP" -> Icons.Default.Chat
+        "WHATSAPP" -> Icons.AutoMirrored.Filled.Chat
         "EMAIL" -> Icons.Default.Email
         "MEETING" -> Icons.Default.People
-        "NOTE" -> Icons.Default.Note
+        "NOTE" -> Icons.AutoMirrored.Filled.Note
         "STATUS_CHANGE" -> Icons.Default.SwapHoriz
         "FOLLOW_UP_SCHEDULED" -> Icons.Default.Schedule
         "QUOTATION" -> Icons.Default.Description

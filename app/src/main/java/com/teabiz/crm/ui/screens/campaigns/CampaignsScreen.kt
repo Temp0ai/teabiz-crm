@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -266,10 +267,7 @@ fun CampaignsScreen(
                         onDelete = { viewModel.deleteCampaign(campaign) },
                         onPause = { viewModel.pauseCampaign() },
                         onResume = { viewModel.resumeCampaign() },
-                        onStop = { viewModel.stopCampaign() },
-                        onShareMedia = { phone, mediaUri, caption ->
-                            viewModel.shareMediaToWhatsApp(phone, mediaUri, caption)
-                        }
+                        onStop = { viewModel.stopCampaign() }
                     )
                 }
             }
@@ -295,11 +293,8 @@ fun CampaignItem(
     onDelete: () -> Unit,
     onPause: () -> Unit = {},
     onResume: () -> Unit = {},
-    onStop: () -> Unit = {},
-    onShareMedia: (String, String, String) -> Unit
+    onStop: () -> Unit = {}
 ) {
-    var showBatchInfo by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
@@ -408,7 +403,7 @@ fun CampaignItem(
                             modifier = Modifier.weight(1f),
                             colors = ButtonDefaults.buttonColors(containerColor = TeaGreen)
                         ) {
-                            Icon(Icons.Default.Send, contentDescription = null)
+                            Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("Send Now")
                         }

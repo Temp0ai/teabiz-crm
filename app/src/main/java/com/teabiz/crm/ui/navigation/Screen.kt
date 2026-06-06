@@ -2,6 +2,8 @@ package com.teabiz.crm.ui.navigation
 
 import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.*
+import androidx.compose.material.icons.automirrored.outlined.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -10,8 +12,8 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector,
     object Dashboard : Screen("dashboard", "Home", Icons.Outlined.Dashboard, Icons.Filled.Dashboard)
     object Leads : Screen("leads", "Leads", Icons.Outlined.People, Icons.Filled.People)
     object Import : Screen("import", "Import", Icons.Outlined.FileUpload, Icons.Filled.FileUpload)
-    object Campaigns : Screen("campaigns", "WhatsApp", Icons.Outlined.Chat, Icons.Filled.Chat, com.teabiz.crm.R.drawable.ic_whatsapp)
-    object Marketing : Screen("marketing", "Marketing", Icons.Outlined.TrendingUp, Icons.Filled.TrendingUp)
+    object Campaigns : Screen("campaigns", "WhatsApp", Icons.AutoMirrored.Outlined.Chat, Icons.AutoMirrored.Filled.Chat, com.teabiz.crm.R.drawable.ic_whatsapp)
+    object Marketing : Screen("marketing", "Marketing", Icons.AutoMirrored.Outlined.TrendingUp, Icons.AutoMirrored.Filled.TrendingUp)
     object Settings : Screen("settings", "Settings", Icons.Outlined.Settings, Icons.Filled.Settings)
 
     object LeadDetail : Screen("lead_detail/{leadId}", "Lead Detail", Icons.Outlined.Person, Icons.Filled.Person) {
