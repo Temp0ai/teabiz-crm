@@ -8,6 +8,7 @@ import androidx.work.*
 import com.teabiz.crm.TeaBizApp
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.repository.LeadRepository
+import com.teabiz.crm.data.repository.MarketingRepository
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
@@ -18,7 +19,8 @@ class CampaignWorker @AssistedInject constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
     private val leadRepository: LeadRepository,
-    private val whatsappService: WhatsAppService
+    private val whatsappService: WhatsAppService,
+    private val marketingRepository: MarketingRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
@@ -37,6 +39,10 @@ class CampaignWorker @AssistedInject constructor(
                 leads
             }
 
+            val bizName = marketingRepository.getSetting("business_name") ?: "TeaBiz"
+            val bizAddress = marketingRepository.getSetting("business_address") ?: ""
+            val bizPhone = marketingRepository.getSetting("business_phone") ?: ""
+
             var sentCount = 0
             var failedCount = 0
 
@@ -51,6 +57,10 @@ class CampaignWorker @AssistedInject constructor(
                         .replace("{name}", lead.name)
                         .replace("{company}", lead.company)
                         .replace("{product}", lead.productInterest.joinToString(", "))
+                        .replace("{city}", lead.city)
+                        .replace("{address}", bizAddress)
+                        .replace("{phone}", bizPhone)
+                        .replace("{business}", bizName)
 
                     val result = whatsappService.sendMessage(lead.phone, personalizedMessage)
 
@@ -59,15 +69,6 @@ class CampaignWorker @AssistedInject constructor(
                     } else {
                         failedCount++
                     }
-
-                    setProgress(workDataOf(
-                        "current" to index + 1,
-                        "total" to filteredLeads.size,
-                        "sent" to sentCount,
-                        "failed" to failedCount
-                    ))
-
-                    TimeUnit.SECONDS.sleep(3) // Rate limiting
                 } catch (e: Exception) {
                     failedCount++
                 }

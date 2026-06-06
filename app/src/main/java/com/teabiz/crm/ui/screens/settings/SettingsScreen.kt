@@ -27,11 +27,15 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
     val messageTone by viewModel.messageTone.collectAsState()
     val whatsappApiUrl by viewModel.whatsappApiUrl.collectAsState()
     val businessName by viewModel.businessName.collectAsState()
+    val businessAddress by viewModel.businessAddress.collectAsState()
+    val businessPhone by viewModel.businessPhone.collectAsState()
 
     var editApiKey by remember(apiKey) { mutableStateOf(apiKey) }
     var editMessageTone by remember(messageTone) { mutableStateOf(messageTone) }
     var editWhatsappUrl by remember(whatsappApiUrl) { mutableStateOf(whatsappApiUrl) }
     var editBusinessName by remember(businessName) { mutableStateOf(businessName) }
+    var editBusinessAddress by remember(businessAddress) { mutableStateOf(businessAddress) }
+    var editBusinessPhone by remember(businessPhone) { mutableStateOf(businessPhone) }
 
     Column(
         modifier = Modifier
@@ -59,6 +63,22 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     label = "Business Name",
                     icon = Icons.Default.Business,
                     placeholder = "Your Tea/Coffee Business"
+                )
+
+                SettingsTextField(
+                    value = editBusinessPhone,
+                    onValueChange = { editBusinessPhone = it },
+                    label = "Business Phone",
+                    icon = Icons.Default.Phone,
+                    placeholder = "+91 98765 43210"
+                )
+
+                SettingsTextField(
+                    value = editBusinessAddress,
+                    onValueChange = { editBusinessAddress = it },
+                    label = "Business Address (GMB)",
+                    icon = Icons.Default.LocationOn,
+                    placeholder = "123 Tea Lane, Mumbai, Maharashtra"
                 )
             }
         }
@@ -135,7 +155,9 @@ fun SettingsScreen(viewModel: SettingsViewModel) {
                     selectedModel = selectedModel,
                     messageTone = editMessageTone,
                     whatsappApiUrl = editWhatsappUrl,
-                    businessName = editBusinessName
+                    businessName = editBusinessName,
+                    businessAddress = editBusinessAddress,
+                    businessPhone = editBusinessPhone
                 )
             },
             modifier = Modifier.fillMaxWidth(),

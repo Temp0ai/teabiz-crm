@@ -920,7 +920,7 @@ fun CreateCampaignDialog(
                         minLines = 4
                     )
                     Text(
-                        "Placeholders: {name}, {company}, {product}, {city}",
+                        "Placeholders: {name}, {company}, {product}, {city}, {address}, {phone}, {business}",
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )

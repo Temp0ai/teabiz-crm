@@ -41,6 +41,23 @@ class SettingsViewModel @Inject constructor(
         .map { it ?: "TeaBiz" }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "TeaBiz")
 
+    val businessAddress: StateFlow<String> = marketingRepository.getSettingFlow("business_address")
+        .map { it ?: "" }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+
+    val businessPhone: StateFlow<String> = marketingRepository.getSettingFlow("business_phone")
+        .map { it ?: "" }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+
+    init {
+        viewModelScope.launch {
+            val name = marketingRepository.getSetting("business_name") ?: "TeaBiz"
+            val address = marketingRepository.getSetting("business_address") ?: ""
+            val phone = marketingRepository.getSetting("business_phone") ?: ""
+            aiService.configureBusiness(name, address, phone)
+        }
+    }
+
     fun setModel(model: String) {
         viewModelScope.launch {
             marketingRepository.setSetting("gemini_model", model)
@@ -80,7 +97,9 @@ class SettingsViewModel @Inject constructor(
         selectedModel: String,
         messageTone: String,
         whatsappApiUrl: String,
-        businessName: String
+        businessName: String,
+        businessAddress: String = "",
+        businessPhone: String = ""
     ) {
         viewModelScope.launch {
             marketingRepository.setSetting("gemini_api_key", apiKey)
@@ -88,8 +107,11 @@ class SettingsViewModel @Inject constructor(
             marketingRepository.setSetting("message_tone", messageTone)
             marketingRepository.setSetting("whatsapp_api_url", whatsappApiUrl)
             marketingRepository.setSetting("business_name", businessName)
+            marketingRepository.setSetting("business_address", businessAddress)
+            marketingRepository.setSetting("business_phone", businessPhone)
 
             aiService.configure(apiKey)
+            aiService.configureBusiness(businessName, businessAddress, businessPhone)
             geminiService.configure(apiKey)
             geminiService.setModel(selectedModel)
             whatsappService.setApiUrl(whatsappApiUrl)

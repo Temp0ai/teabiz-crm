@@ -12,12 +12,14 @@ import com.teabiz.crm.data.model.*
 import com.teabiz.crm.data.remote.AiService
 import com.teabiz.crm.data.remote.WhatsAppService
 import com.teabiz.crm.data.repository.LeadRepository
+import com.teabiz.crm.data.repository.MarketingRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.random.Random
 import javax.inject.Inject
 
 @HiltViewModel
@@ -26,6 +28,7 @@ class CampaignsViewModel @Inject constructor(
     private val leadRepository: LeadRepository,
     private val whatsappService: WhatsAppService,
     private val aiService: AiService,
+    private val marketingRepository: MarketingRepository,
     private val templateDao: CampaignTemplateDao,
     private val blacklistDao: BlacklistDao,
     private val analyticsDao: CampaignAnalyticsDao
@@ -86,6 +89,16 @@ class CampaignsViewModel @Inject constructor(
 
     init {
         calculateBestTimeToSend()
+        loadBusinessSettings()
+    }
+
+    private fun loadBusinessSettings() {
+        viewModelScope.launch {
+            val name = marketingRepository.getSetting("business_name") ?: "TeaBiz"
+            val address = marketingRepository.getSetting("business_address") ?: ""
+            val phone = marketingRepository.getSetting("business_phone") ?: ""
+            aiService.configureBusiness(name, address, phone)
+        }
     }
 
     private fun calculateBestTimeToSend() {
@@ -317,6 +330,12 @@ class CampaignsViewModel @Inject constructor(
                 val messagesA = mutableListOf<String>()
                 val messagesB = mutableListOf<String>()
 
+                val bizName = marketingRepository.getSetting("business_name") ?: "TeaBiz"
+                val bizAddress = marketingRepository.getSetting("business_address") ?: ""
+                val bizPhone = marketingRepository.getSetting("business_phone") ?: ""
+
+                var messageVariationIndex = 0
+
                 for ((index, lead) in filteredLeads.withIndex()) {
                     while (_isPaused.value) {
                         kotlinx.coroutines.delay(500L)
@@ -339,12 +358,16 @@ class CampaignsViewModel @Inject constructor(
                     val isTypeA = if (campaign.abTestEnabled) index % 2 == 0 else true
                     val messageTemplate = if (isTypeA) campaign.messageTemplate else campaign.abTestMessage.ifBlank { campaign.messageTemplate }
 
-                    val personalizedMessage = messageTemplate
+                    val baseMessage = messageTemplate
                         .replace("{name}", lead.name)
                         .replace("{company}", lead.company)
                         .replace("{product}", lead.productInterest.joinToString(", "))
                         .replace("{city}", lead.city)
+                        .replace("{address}", bizAddress)
+                        .replace("{phone}", bizPhone)
+                        .replace("{business}", bizName)
 
+                    val personalizedMessage = addMessageVariation(baseMessage, messageVariationIndex++)
                     val cleanPhone = lead.phone.replace(Regex("[^0-9]"), "")
                     val contactInfo = "${lead.name} (${lead.phone})"
                     if (cleanPhone.length < 10) {
@@ -355,7 +378,9 @@ class CampaignsViewModel @Inject constructor(
                     }
 
                     try {
-                        com.teabiz.crm.util.WhatsAppUtils.openWhatsAppBusiness(context, lead.phone, personalizedMessage)
+                        val url = "https://wa.me/$cleanPhone?text=${android.net.Uri.encode(personalizedMessage)}"
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        context.startActivity(intent)
 
                         sentCount++
                         sentList.add(contactInfo)
@@ -376,7 +401,23 @@ class CampaignsViewModel @Inject constructor(
 
                         if (isTypeA) messagesA.add(personalizedMessage) else messagesB.add(personalizedMessage)
 
-                        kotlinx.coroutines.delay(2000L)
+                        if (index < filteredLeads.lastIndex) {
+                            val baseDelay = Random.nextLong(20_000, 50_000)
+
+                            val breakBonus = if ((sentCount) % 10 == 0) {
+                                _sendStatus.value = "Taking a short break after $sentCount messages..."
+                                Random.nextLong(90_000, 180_000)
+                            } else 0L
+
+                            val activityGap = if ((sentCount) % 25 == 0) {
+                                _sendStatus.value = "Activity gap pause..."
+                                Random.nextLong(300_000, 600_000)
+                            } else 0L
+
+                            val totalDelay = baseDelay + breakBonus + activityGap
+                            _sendStatus.value = "Waiting ${totalDelay / 1000}s before next message..."
+                            kotlinx.coroutines.delay(totalDelay)
+                        }
                     } catch (e: Exception) {
                         failedCount++
                         _sendProgress.value = Pair(index + 1, total)
@@ -481,6 +522,22 @@ class CampaignsViewModel @Inject constructor(
         _sentContacts.value = emptyList()
         _remainingContacts.value = emptyList()
         _activeCampaignId.value = null
+    }
+
+    private fun addMessageVariation(message: String, index: Int): String {
+        val variations = listOf(
+            { msg: String -> msg },
+            { msg: String -> msg.replace("!", "! ").trimEnd() },
+            { msg: String -> msg.replace(".", ". ").trimEnd() },
+            { msg: String -> msg + "\u200B" },
+            { msg: String -> msg.replace("  ", " ") },
+            { msg: String -> msg + " " },
+            { msg: String -> msg.replace("Hello", "Hi").replace("hello", "hi") },
+            { msg: String -> msg.replace("Thank you", "Thanks").replace("thank you", "thanks") },
+            { msg: String -> msg.replace("Dear", "Hi").replace("dear", "hi") },
+            { msg: String -> msg.replace("best regards", "regards").replace("Best Regards", "Regards") },
+        )
+        return variations[index % variations.size](message)
     }
 
     fun saveTemplate(name: String, message: String, category: String, tone: String, language: String) {

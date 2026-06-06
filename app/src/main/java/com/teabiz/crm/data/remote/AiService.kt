@@ -11,10 +11,19 @@ class AiService @Inject constructor(
     private val geminiService: GeminiService
 ) {
     private var apiKey: String = ""
+    private var businessName: String = ""
+    private var businessAddress: String = ""
+    private var businessPhone: String = ""
 
     fun configure(apiKey: String) {
         this.apiKey = apiKey
         geminiService.configure(apiKey)
+    }
+
+    fun configureBusiness(name: String, address: String = "", phone: String = "") {
+        this.businessName = name
+        this.businessAddress = address
+        this.businessPhone = phone
     }
 
     fun isConfigured(): Boolean = apiKey.isNotBlank()
@@ -137,11 +146,19 @@ class AiService @Inject constructor(
         val clientInfo = if (lead.company.isNotBlank()) "from ${lead.company}" else ""
         val cityInfo = if (lead.city.isNotBlank()) "in ${lead.city}" else ""
 
+        val businessInfo = buildString {
+            if (businessName.isNotBlank()) append("Business: $businessName. ")
+            if (businessPhone.isNotBlank()) append("Contact us at: $businessPhone. ")
+            if (businessAddress.isNotBlank()) append("Visit us at: $businessAddress. ")
+        }
+
         return when (messageType) {
             "initial_inquiry" -> """
                 Create a professional follow-up message for ${lead.name} $clientInfo $cityInfo who inquired about: $products.
                 
                 Their inquiry message: "${lead.message}"
+                
+                Business details: $businessInfo
                 
                 Requirements:
                 - Tone: $tone
@@ -149,6 +166,7 @@ class AiService @Inject constructor(
                 - Thank them for their interest
                 - Highlight product quality and benefits
                 - Mention competitive pricing
+                - Include the business phone number and address in the message
                 - Include a clear call-to-action
                 - Keep it concise (3-4 sentences)
                 - Add relevant product recommendations
@@ -159,12 +177,15 @@ class AiService @Inject constructor(
             "stale_lead" -> """
                 Re-engage ${lead.name} $clientInfo who showed interest in $products but hasn't responded.
                 
+                Business details: $businessInfo
+                
                 Requirements:
                 - Tone: $tone
                 - Language: $language
                 - Create urgency with limited-time offer
                 - Mention new products or updates
                 - Offer a special discount
+                - Include business phone number and address
                 - Keep it friendly and professional
                 - Include a clear next step
                 
@@ -174,6 +195,8 @@ class AiService @Inject constructor(
             "post_purchase" -> """
                 Send a thank-you message to ${lead.name} $clientInfo for their recent purchase of $products.
                 
+                Business details: $businessInfo
+                
                 Requirements:
                 - Tone: $tone
                 - Language: $language
@@ -181,13 +204,15 @@ class AiService @Inject constructor(
                 - Request feedback/review
                 - Suggest complementary products
                 - Mention referral program
-                - Include support contact
+                - Include business phone number and address for support
                 
                 Message:
             """.trimIndent()
 
             "promotional" -> """
                 Create a promotional message for ${lead.name} $clientInfo about our $products.
+                
+                Business details: $businessInfo
                 
                 Requirements:
                 - Tone: $tone
@@ -196,6 +221,7 @@ class AiService @Inject constructor(
                 - Emphasize value proposition
                 - Create FOMO (fear of missing out)
                 - Include clear pricing if applicable
+                - Include business phone number and address
                 - Strong call-to-action
                 
                 Message:
@@ -204,6 +230,7 @@ class AiService @Inject constructor(
             else -> """
                 Create a message for ${lead.name} about $products.
                 Tone: $tone, Language: $language
+                Business details: $businessInfo
                 
                 Message:
             """.trimIndent()
@@ -264,6 +291,12 @@ class AiService @Inject constructor(
 
         val productHint = Regex("who (?:inquired about|showed interest in|recent purchase of|about our) (.+?)(?:\\.|\\n)").find(prompt)?.groupValues?.get(1) ?: "our products"
 
+        val businessDetails = buildString {
+            if (businessName.isNotBlank()) append(" $businessName")
+            if (businessPhone.isNotBlank()) append(". Contact: $businessPhone")
+            if (businessAddress.isNotBlank()) append(". Visit: $businessAddress")
+        }.ifBlank { "" }
+
         return when {
             prompt.contains("competitor", ignoreCase = true) && prompt.contains("analyze", ignoreCase = true) ->
                 """
@@ -297,27 +330,27 @@ class AiService @Inject constructor(
 
             prompt.contains("follow-up", ignoreCase = true) || prompt.contains("inquiry", ignoreCase = true) ->
                 when (lang) {
-                    "hi" -> "नमस्ते! $productHint में आपकी रुचि के लिए धन्यवाद। हम आपके व्यवसाय के लिए हमारे प्रीमियम उत्पादों के लाभों पर चर्चा करना चाहेंगे। कृपया हमें एक सुविधाजनक समय बताएं, या कोई भी प्रश्न पूछें। आपसे सुनने की प्रतीक्षा रहेगी!"
-                    "mr" -> "नमस्कार! $productHint मध्ये आपल्या आवडीबद्दल धन्यवाद. आमच्या प्रीमियम उत्पादनांचे तुमच्या व्यवसायासाठी काय फायदे आहेत यावर आम्ही चर्चा करू इच्छितो. कृपया आम्हाला एक सुविधाजनक वेळ सांगा, किंवा कोणताही प्रश्न विचारा. तुमच्याकडून ऐकण्याची आतुरता!"
-                    else -> "Thank you for your interest in $productHint! We'd love to discuss how our premium tea and coffee solutions can benefit your business. Please let us know a convenient time for a quick call, or feel free to ask any questions. Looking forward to hearing from you!"
+                    "hi" -> "नमस्ते! $productHint में आपकी रुचि के लिए धन्यवाद। हम आपके व्यवसाय के लिए हमारे प्रीमियम उत्पादों के लाभों पर चर्चा करना चाहेंगे। कृपया हमें एक सुविधाजनक समय बताएं, या कोई भी प्रश्न पूछें।$businessDetails आपसे सुनने की प्रतीक्षा रहेगी!"
+                    "mr" -> "नमस्कार! $productHint मध्ये आपल्या आवडीबद्दल धन्यवाद. आमच्या प्रीमियम उत्पादनांचे तुमच्या व्यवसायासाठी काय फायदे आहेत यावर आम्ही चर्चा करू इच्छितो. कृपया आम्हाला एक सुविधाजनक वेळ सांगा, किंवा कोणताही प्रश्न विचारा.$businessDetails तुमच्याकडून ऐकण्याची आतुरता!"
+                    else -> "Thank you for your interest in $productHint! We'd love to discuss how our premium tea and coffee solutions can benefit your business. Please let us know a convenient time for a quick call, or feel free to ask any questions.$businessDetails Looking forward to hearing from you!"
                 }
             prompt.contains("stale", ignoreCase = true) || prompt.contains("re-engage", ignoreCase = true) ->
                 when (lang) {
-                    "hi" -> "नमस्ते! हमने देखा कि आप $productHint में रुचि रखते थे। हमारे पास कुछ रोमांचक नए ऑफर और उत्पाद अपडेट हैं जो हम आपके साथ साझा करना चाहेंगे। क्या आप एक त्वरित चैट शेड्यूल करना चाहेंगे?"
-                    "mr" -> "नमस्कार! आम्हाला दिसले की तुम्हाला $productHint मध्ये आस्ती होती. आमच्याकडे काही रोमांचक नवीन ऑफर आणि उत्पादन अपडेट आहेत जे आम्ही तुमच्याशी शेअर करू इच्छितो. तुम्ही एक जलद चैट शेड्यूल करू इच्छाल का?"
-                    else -> "Hi! We noticed you were interested in $productHint earlier. We have some exciting new offers and product updates we'd love to share with you. Would you like to schedule a quick chat to explore how we can work together?"
+                    "hi" -> "नमस्ते! हमने देखा कि आप $productHint में रुचि रखते थे। हमारे पास कुछ रोमांचक नए ऑफर और उत्पाद अपडेट हैं जो हम आपके साथ साझा करना चाहेंगे। क्या आप एक त्वरित चैट शेड्यूल करना चाहेंगे?$businessDetails"
+                    "mr" -> "नमस्कार! आम्हाला दिसले की तुम्हाला $productHint मध्ये आस्ती होती. आमच्याकडे काही रोमांचक नवीन ऑफर आणि उत्पादन अपडेट आहेत जे आम्ही तुमच्याशी शेअर करू इच्छितो. तुम्ही एक जलद चैट शेड्यूल करू इच्छाल का?$businessDetails"
+                    else -> "Hi! We noticed you were interested in $productHint earlier. We have some exciting new offers and product updates we'd love to share with you. Would you like to schedule a quick chat to explore how we can work together?$businessDetails"
                 }
             prompt.contains("thank", ignoreCase = true) || prompt.contains("post_purchase", ignoreCase = true) ->
                 when (lang) {
-                    "hi" -> "धन्यवाद $productHint के लिए चुनने के लिए! हम आशा करते हैं कि आप अपनी खरीदारी का आनंद ले रहे हैं। आपकी प्रतिक्रिया हमारे लिए बहुत मायने रखती है। यदि आपको किसी भी चीज़ की आवश्यकता है, तो बेझिझक हमसे संपर्क करें। हमारे पास एक रेफरल प्रोग्राम भी है!"
-                    "mr" -> "$productHint निवडल्याबद्दल धन्यवाद! आम्हाला आशा आहे की तुम्ही तुमच्या खरेदीचा आनंद घेत आहात. तुमचा अभिप्राय आमच्यासाठी खूप महत्त्वाचा आहे. काहीही हवे असल्यास आमच्याशी संपर्क साधा. आमच्याकडे रेफरल प्रोग्रामही आहे!"
-                    else -> "Thank you for choosing $productHint! We hope you're enjoying your purchase. Your feedback means the world to us. If you need anything, don't hesitate to reach out. We also have a referral program - share with friends and earn rewards!"
+                    "hi" -> "धन्यवाद $productHint के लिए चुनने के लिए! हम आशा करते हैं कि आप अपनी खरीदारी का आनंद ले रहे हैं। आपकी प्रतिक्रिया हमारे लिए बहुत मायने रखती है। यदि आपको किसी भी चीज़ की आवश्यकता है, तो बेझिझक हमसे संपर्क करें।$businessDetails हमारे पास एक रेफरल प्रोग्राम भी है!"
+                    "mr" -> "$productHint निवडल्याबद्दल धन्यवाद! आम्हाला आशा आहे की तुम्ही तुमच्या खरेदीचा आनंद घेत आहात. तुमचा अभिप्राय आमच्यासाठी खूप महत्त्वाचा आहे. काहीही हवे असल्यास आमच्याशी संपर्क साधा.$businessDetails आमच्याकडे रेफरल प्रोग्रामही आहे!"
+                    else -> "Thank you for choosing $productHint! We hope you're enjoying your purchase. Your feedback means the world to us. If you need anything, don't hesitate to reach out.$businessDetails We also have a referral program - share with friends and earn rewards!"
                 }
             prompt.contains("promotional", ignoreCase = true) ->
                 when (lang) {
-                    "hi" -> "केवल आपके लिए विशेष ऑफर! $productHint पर विशेष छूट प्राप्त करें। सीमित समय का ऑफर - आज ही हमसे संपर्क करें और अपने व्यवसाय के लिए बल्क प्राइसिंग के बारे में जानें!"
-                    "mr" -> "फक्त तुमच्यासाठी विशेष ऑफर! $productHint वर विशेष सवलत मिळवा. मर्यादित काळाचा ऑफर - आजच आमच्याशी संपर्क साधा आणि बल्क प्राइसिंगबद्दल जाणून घ्या!"
-                    else -> "Special offer just for you! Get exclusive deals on $productHint. Limited time offer - contact us today to learn more about our business partnership programs and bulk pricing!"
+                    "hi" -> "केवल आपके लिए विशेष ऑफर! $productHint पर विशेष छूट प्राप्त करें। सीमित समय का ऑफर - आज ही हमसे संपर्क करें और अपने व्यवसाय के लिए बल्क प्राइसिंग के बारे में जानें!$businessDetails"
+                    "mr" -> "फक्त तुमच्यासाठी विशेष ऑफर! $productHint वर विशेष सवलत मिळवा. मर्यादित काळाचा ऑफर - आजच आमच्याशी संपर्क साधा आणि बल्क प्राइसिंगबद्दल जाणून घ्या!$businessDetails"
+                    else -> "Special offer just for you! Get exclusive deals on $productHint. Limited time offer - contact us today to learn more about our business partnership programs and bulk pricing!$businessDetails"
                 }
             else ->
                 when (lang) {
