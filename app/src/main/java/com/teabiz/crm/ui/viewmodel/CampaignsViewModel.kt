@@ -391,7 +391,9 @@ class CampaignsViewModel @Inject constructor(
 
                     try {
                         val url = "https://wa.me/$finalPhone?text=${android.net.Uri.encode(personalizedMessage)}"
-                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                        val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
                         context.startActivity(intent)
 
                         sentCount++

@@ -219,6 +219,26 @@ fun CampaignsScreen(
             LaunchedEffect(Unit) { viewModel.resetState() }
         }
 
+        if (campaignState is CampaignsViewModel.CampaignState.Error) {
+            val error = campaignState as CampaignsViewModel.CampaignState.Error
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = StatusLost.copy(alpha = 0.1f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Error, contentDescription = null, tint = StatusLost)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Campaign failed: ${error.message}", fontWeight = FontWeight.Bold, color = StatusLost)
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            LaunchedEffect(Unit) { viewModel.resetState() }
+        }
+
         if (campaignState is CampaignsViewModel.CampaignState.Completed) {
             val completed = campaignState as CampaignsViewModel.CampaignState.Completed
             Card(
@@ -397,7 +417,7 @@ fun CampaignItem(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (campaign.status) {
-                    "DRAFT", "SCHEDULED" -> {
+                    "DRAFT", "SCHEDULED", "COMPLETED", "PAUSED", "FAILED" -> {
                         Button(
                             onClick = onSend,
                             modifier = Modifier.weight(1f),
@@ -405,7 +425,7 @@ fun CampaignItem(
                         ) {
                             Icon(Icons.AutoMirrored.Filled.Send, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Send Now")
+                            Text(if (campaign.status == "DRAFT" || campaign.status == "SCHEDULED") "Send Now" else "Re-send")
                         }
                         IconButton(onClick = onDelete) {
                             Icon(Icons.Default.Delete, contentDescription = "Delete", tint = StatusLost)
