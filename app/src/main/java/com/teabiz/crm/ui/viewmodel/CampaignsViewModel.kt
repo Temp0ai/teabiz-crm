@@ -370,7 +370,19 @@ class CampaignsViewModel @Inject constructor(
                     val personalizedMessage = addMessageVariation(baseMessage, messageVariationIndex++)
                     val cleanPhone = lead.phone.replace(Regex("[^0-9]"), "")
                     val contactInfo = "${lead.name} (${lead.phone})"
-                    if (cleanPhone.length < 10) {
+                    
+                    // Add country code if missing (India default)
+                    val finalPhone = if (cleanPhone.length == 10) {
+                        "91$cleanPhone"
+                    } else if (cleanPhone.length == 12 && cleanPhone.startsWith("91")) {
+                        cleanPhone
+                    } else if (cleanPhone.length > 12) {
+                        cleanPhone.takeLast(12)
+                    } else {
+                        cleanPhone
+                    }
+                    
+                    if (finalPhone.length < 12) {
                         failedCount++
                         _sendProgress.value = Pair(index + 1, total)
                         remainingList.remove(contactInfo)
@@ -378,7 +390,7 @@ class CampaignsViewModel @Inject constructor(
                     }
 
                     try {
-                        val url = "https://wa.me/$cleanPhone?text=${android.net.Uri.encode(personalizedMessage)}"
+                        val url = "https://wa.me/$finalPhone?text=${android.net.Uri.encode(personalizedMessage)}"
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
                         context.startActivity(intent)
 
