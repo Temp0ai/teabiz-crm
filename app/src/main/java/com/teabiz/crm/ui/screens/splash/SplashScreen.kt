@@ -1,9 +1,9 @@
 package com.teabiz.crm.ui.screens.splash
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,7 +13,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -23,15 +22,13 @@ import kotlinx.coroutines.delay
 fun SplashScreen(onSplashFinished: () -> Unit) {
     val infiniteTransition = rememberInfiniteTransition(label = "splash")
 
-    // Tea pour animation
-    val pourProgress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing, delayMillis = 300),
-        label = "pour"
-    )
+    // Tea pour animation - one-shot using Animatable
+    val pourProgress = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        pourProgress.animateTo(1f, animationSpec = tween(1200, delayMillis = 300, easing = FastOutSlowInEasing))
+    }
 
-    // Steam opacity
+    // Steam opacity - infinite loop
     val steamAlpha by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 0.6f,
@@ -42,7 +39,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         label = "steam"
     )
 
-    // Steam float up
+    // Steam float up - infinite loop
     val steamOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = -30f,
@@ -53,19 +50,17 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         label = "steamOffset"
     )
 
-    // Brand text fade in
-    val textAlpha by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = tween(durationMillis = 800, delayMillis = 1000, easing = FastOutSlowInEasing),
-        label = "textAlpha"
-    )
-    val textOffset by infiniteTransition.animateFloat(
-        initialValue = 15f,
-        targetValue = 0f,
-        animationSpec = tween(durationMillis = 800, delayMillis = 1000, easing = FastOutSlowInEasing),
-        label = "textOffset"
-    )
+    // Brand text fade in - one-shot
+    val textAlpha = remember { Animatable(0f) }
+    val textOffset = remember { Animatable(15f) }
+    LaunchedEffect(Unit) {
+        delay(800)
+        textAlpha.animateTo(1f, animationSpec = tween(800, easing = FastOutSlowInEasing))
+    }
+    LaunchedEffect(Unit) {
+        delay(800)
+        textOffset.animateTo(0f, animationSpec = tween(800, easing = FastOutSlowInEasing))
+    }
 
     LaunchedEffect(Unit) {
         delay(1500)
@@ -90,9 +85,10 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 size = Size(120.dp.toPx(), 16.dp.toPx())
             )
 
-            // Tea stream (pours down behind cup)
-            if (pourProgress < 0.8f) {
-                val streamAlpha = if (pourProgress < 0.7f) 1f else (1f - (pourProgress - 0.7f) / 0.1f)
+            // Tea stream
+            val pour = pourProgress.value
+            if (pour < 0.8f) {
+                val streamAlpha = if (pour < 0.7f) 1f else (1f - (pour - 0.7f) / 0.1f)
                 drawLine(
                     color = Color(0xFFD35400).copy(alpha = streamAlpha.coerceIn(0f, 1f)),
                     start = Offset(cx, 0f),
@@ -117,7 +113,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(cupRadius)
             )
 
-            // Cup body - white matte gradient effect
+            // Cup body
             drawRoundRect(
                 brush = androidx.compose.ui.graphics.Brush.linearGradient(
                     colors = listOf(Color(0xFFFFFFFF), Color(0xFFEAE6DF)),
@@ -167,17 +163,16 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .offset(y = textOffset.dp)
+                .offset(y = textOffset.value.dp)
                 .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {
-
             Text(
                 text = "Arihant's Natural",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.ExtraBold,
-                color = Color(0xFF0A6B3B).copy(alpha = textAlpha)
+                color = Color(0xFF0A6B3B).copy(alpha = textAlpha.value)
             )
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -186,7 +181,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 text = "Let's Brew",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFFED1C24).copy(alpha = textAlpha)
+                color = Color(0xFFED1C24).copy(alpha = textAlpha.value)
             )
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -195,7 +190,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 text = "LOADING CRM",
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFA0A0A0).copy(alpha = textAlpha),
+                color = Color(0xFFA0A0A0).copy(alpha = textAlpha.value),
                 letterSpacing = 2.sp
             )
             Spacer(modifier = Modifier.height(80.dp))
