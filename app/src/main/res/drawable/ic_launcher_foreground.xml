@@ -6,69 +6,38 @@
     android:viewportHeight="108">
     <!-- Off-white background -->
     <path
-        android:fillColor="#F0EDE4"
+        android:fillColor="#F5F4ED"
         android:pathData="M0,0h108v108H0z" />
-    <!-- Embossed ring outer shadow -->
+    <!-- Inner circle embossed ring -->
     <path
-        android:fillColor="#E8E4DB"
-        android:pathData="M54,40m-26,0a26,26 0,1 1,52 0a26,26 0,1 1,-52 0" />
-    <!-- Embossed ring -->
-    <path
-        android:fillColor="#F5F2EA"
+        android:fillColor="#F5F4ED"
         android:strokeColor="#E0DDD4"
         android:strokeWidth="1"
-        android:pathData="M54,40m-24,0a24,24 0,1 1,48 0a24,24 0,1 1,-48 0" />
-    <!-- Small decorative leaf left -->
-    <path
-        android:fillColor="#D8D4CB"
-        android:pathData="M32,48 C33,44 36,44 36,48 C36,52 33,52 32,48Z" />
-    <!-- Small decorative leaf right -->
-    <path
-        android:fillColor="#D8D4CB"
-        android:pathData="M72,48 C73,44 76,44 76,48 C76,52 73,52 72,48Z" />
-    <!-- Steam decoration left -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#D8D4CB"
-        android:strokeWidth="1.5"
-        android:pathData="M42,22 Q40,18 42,14" />
-    <!-- Steam decoration right -->
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#D8D4CB"
-        android:strokeWidth="1.5"
-        android:pathData="M66,22 Q64,18 66,14" />
+        android:pathData="M54,50m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
     <!-- Green curved leaf -->
     <path
-        android:fillColor="#4CAF50"
-        android:pathData="M54,22 C60,18 66,22 63,30 C60,36 56,38 54,34 C52,38 48,36 45,30 C42,22 48,18 54,22Z" />
-    <!-- White center vein -->
+        android:fillColor="#189842"
+        android:pathData="M54,30 C62,24 70,28 66,36 C63,42 57,42 54,38 C51,42 45,42 42,36 C38,28 46,24 54,30Z" />
+    <!-- Leaf gradient overlay (lighter top) -->
+    <path
+        android:fillColor="#55B849"
+        android:pathData="M54,30 C58,27 64,29 62,34 C60,38 56,38 54,36 Z" />
+    <!-- White vein -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
         android:strokeWidth="1.5"
-        android:pathData="M54,24 L54,34" />
-    <!-- Side veins -->
+        android:pathData="M46,34 L62,30" />
+    <!-- ARIHANT'S - dark red -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1"
-        android:pathData="M54,28 L58,26" />
+        android:fillColor="#A0152B"
+        android:pathData="M34,62l4,-12l2,0l8,12l2,0l8,-12l2,0l4,12l-3,0l-1.8,-6l-8.4,0l-1.8,6z M42.8,58l5.4,0l-2.7,-8z" />
+    <!-- Natural - green -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="1"
-        android:pathData="M54,31 L50,29" />
-    <!-- ARIHANT'S text - dark red -->
-    <path
-        android:fillColor="#B71C1C"
-        android:pathData="M36,68l4,-12l2,0l8,12l2,0l8,-12l2,0l4,12l-3,0l-1.8,-6l-8.4,0l-1.8,6z M44.8,64l5.4,0l-2.7,-8z" />
-    <!-- Natural text - green -->
-    <path
-        android:fillColor="#2E7D32"
-        android:pathData="M38,78l2,-12l5,8l5,-8l2,0l2,12l-2,0l-0.4,-2l-6.2,9l-0.4,0l-6.2,-9l-0.4,2z M45,74l4.2,0l-2.1,-6.5z" />
+        android:fillColor="#0A8240"
+        android:pathData="M36,72l2,-12l5,8l5,-8l2,0l2,12l-2,0l-0.4,-2l-6.2,9l-0.4,0l-6.2,-9l-0.4,2z M43,68l4.2,0l-2.1,-6.5z" />
     <!-- Instant Premix - grey -->
     <path
-        android:fillColor="#9E9E9E"
-        android:pathData="M41,88l22,0l0,1l-22,0z" />
+        android:fillColor="#888888"
+        android:pathData="M39,82l26,0l0,1l-26,0z" />
 </vector>
