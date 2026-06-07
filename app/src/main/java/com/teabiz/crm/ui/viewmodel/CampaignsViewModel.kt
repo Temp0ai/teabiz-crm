@@ -118,21 +118,21 @@ class CampaignsViewModel @Inject constructor(
 
     fun getContactCountByCategory(category: String) {
         viewModelScope.launch {
-            val leads = leadRepository.getWhatsAppOptInLeads().first()
+            val leads = leadRepository.getAllLeads().first()
             val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone }
             val count = if (category.isBlank()) {
-                leads.count { it.phone !in blacklisted }
+                leads.count { it.phone.isNotBlank() && it.phone !in blacklisted }
             } else {
                 leads.count { lead ->
-                    lead.productInterest.any { it.contains(category, ignoreCase = true) } && lead.phone !in blacklisted
+                    lead.phone.isNotBlank() && lead.productInterest.any { it.contains(category, ignoreCase = true) } && lead.phone !in blacklisted
                 }
             }
             _contactCount.value = count
             _filteredLeads.value = if (category.isBlank()) {
-                leads.filter { it.phone !in blacklisted }
+                leads.filter { it.phone.isNotBlank() && it.phone !in blacklisted }
             } else {
                 leads.filter { lead ->
-                    lead.productInterest.any { it.contains(category, ignoreCase = true) } && lead.phone !in blacklisted
+                    lead.phone.isNotBlank() && lead.productInterest.any { it.contains(category, ignoreCase = true) } && lead.phone !in blacklisted
                 }
             }
         }
@@ -140,10 +140,10 @@ class CampaignsViewModel @Inject constructor(
 
     fun getAllLeadsCount() {
         viewModelScope.launch {
-            val leads = leadRepository.getWhatsAppOptInLeads().first()
+            val leads = leadRepository.getAllLeads().first()
             val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone }
-            _contactCount.value = leads.count { it.phone !in blacklisted }
-            _filteredLeads.value = leads.filter { it.phone !in blacklisted }
+            _contactCount.value = leads.count { it.phone.isNotBlank() && it.phone !in blacklisted }
+            _filteredLeads.value = leads.filter { it.phone.isNotBlank() && it.phone !in blacklisted }
         }
     }
 
@@ -155,11 +155,9 @@ class CampaignsViewModel @Inject constructor(
         minScore: Int = 0
     ) {
         viewModelScope.launch {
-            val leads = leadRepository.getWhatsAppOptInLeads().first()
-            val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone
-
-            }
-            var filtered = leads.filter { it.phone !in blacklisted }
+            val leads = leadRepository.getAllLeads().first()
+            val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone }
+            var filtered = leads.filter { it.phone.isNotBlank() && it.phone !in blacklisted }
 
             if (category.isNotBlank()) {
                 filtered = filtered.filter { lead ->
@@ -278,17 +276,27 @@ class CampaignsViewModel @Inject constructor(
             _sentContacts.value = emptyList()
             _remainingContacts.value = emptyList()
             try {
-                val campaign = leadRepository.getCampaignById(campaignId) ?: return@launch
-                val leads = leadRepository.getWhatsAppOptInLeads().first()
+                val campaign = leadRepository.getCampaignById(campaignId)
+                if (campaign == null) {
+                    _campaignState.value = CampaignState.Error("Campaign not found")
+                    _activeCampaignId.value = null
+                    return@launch
+                }
+
+                val leads = leadRepository.getAllLeads().first()
 
                 val blacklisted = blacklistDao.getAllBlacklisted().first().map { it.phone }
-                var filteredLeads = if (campaign.targetCategory.isNotBlank()) {
-                    leads.filter { lead ->
+                var filteredLeads = leads.filter { lead ->
+                    val hasPhone = lead.phone.isNotBlank() && lead.phone.replace(Regex("[^0-9]"), "").isNotEmpty()
+                    val notBlacklisted = lead.phone !in blacklisted
+                    hasPhone && notBlacklisted
+                }
+
+                if (campaign.targetCategory.isNotBlank()) {
+                    filteredLeads = filteredLeads.filter { lead ->
                         lead.productInterest.any { it.contains(campaign.targetCategory, ignoreCase = true) }
                     }
-                } else {
-                    leads
-                }.filter { it.phone.isNotBlank() && it.phone !in blacklisted }
+                }
 
                 if (campaign.targetPriority.isNotBlank()) {
                     filteredLeads = filteredLeads.filter { lead ->
@@ -307,7 +315,10 @@ class CampaignsViewModel @Inject constructor(
                 }
 
                 if (filteredLeads.isEmpty()) {
-                    _campaignState.value = CampaignState.Error("No contacts found with phone numbers")
+                    val totalLeads = leads.size
+                    val withPhone = leads.count { it.phone.isNotBlank() }
+                    _campaignState.value = CampaignState.Error("No contacts found. Total leads: $totalLeads, with phone: $withPhone")
+                    _activeCampaignId.value = null
                     return@launch
                 }
 
@@ -370,27 +381,27 @@ class CampaignsViewModel @Inject constructor(
                     val personalizedMessage = addMessageVariation(baseMessage, messageVariationIndex++)
                     val cleanPhone = lead.phone.replace(Regex("[^0-9]"), "")
                     val contactInfo = "${lead.name} (${lead.phone})"
-                    
-                    // Add country code if missing (India default)
-                    val finalPhone = if (cleanPhone.length == 10) {
-                        "91$cleanPhone"
-                    } else if (cleanPhone.length == 12 && cleanPhone.startsWith("91")) {
-                        cleanPhone
-                    } else if (cleanPhone.length > 12) {
-                        cleanPhone.takeLast(12)
-                    } else {
-                        cleanPhone
+
+                    val finalPhone = when {
+                        cleanPhone.length == 10 -> "91$cleanPhone"
+                        cleanPhone.length == 12 && cleanPhone.startsWith("91") -> cleanPhone
+                        cleanPhone.length == 13 && cleanPhone.startsWith("91") -> cleanPhone
+                        cleanPhone.length > 12 -> cleanPhone.takeLast(12)
+                        cleanPhone.length >= 7 -> "91$cleanPhone"
+                        else -> cleanPhone
                     }
-                    
-                    if (finalPhone.length < 12) {
+
+                    if (finalPhone.length < 10 || !finalPhone.all { it.isDigit() }) {
                         failedCount++
                         _sendProgress.value = Pair(index + 1, total)
+                        _sendStatus.value = "Skipped ${lead.name} - invalid phone: ${lead.phone}"
                         remainingList.remove(contactInfo)
                         continue
                     }
 
                     try {
-                        val url = "https://wa.me/$finalPhone?text=${android.net.Uri.encode(personalizedMessage)}"
+                        val encodedText = android.net.Uri.encode(personalizedMessage)
+                        val url = "https://wa.me/$finalPhone?text=$encodedText"
                         val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url)).apply {
                             addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
                         }
@@ -416,25 +427,22 @@ class CampaignsViewModel @Inject constructor(
                         if (isTypeA) messagesA.add(personalizedMessage) else messagesB.add(personalizedMessage)
 
                         if (index < filteredLeads.lastIndex) {
-                            val baseDelay = Random.nextLong(20_000, 50_000)
+                            val baseDelay = Random.nextLong(15_000, 35_000)
 
                             val breakBonus = if ((sentCount) % 10 == 0) {
                                 _sendStatus.value = "Taking a short break after $sentCount messages..."
-                                Random.nextLong(90_000, 180_000)
+                                Random.nextLong(60_000, 120_000)
                             } else 0L
 
-                            val activityGap = if ((sentCount) % 25 == 0) {
-                                _sendStatus.value = "Activity gap pause..."
-                                Random.nextLong(300_000, 600_000)
-                            } else 0L
-
-                            val totalDelay = baseDelay + breakBonus + activityGap
+                            val totalDelay = baseDelay + breakBonus
                             _sendStatus.value = "Waiting ${totalDelay / 1000}s before next message..."
                             kotlinx.coroutines.delay(totalDelay)
                         }
                     } catch (e: Exception) {
                         failedCount++
                         _sendProgress.value = Pair(index + 1, total)
+                        _sendStatus.value = "Failed for ${lead.name}: ${e.message?.take(50) ?: "unknown error"}"
+                        remainingList.remove(contactInfo)
                     }
                 }
 
