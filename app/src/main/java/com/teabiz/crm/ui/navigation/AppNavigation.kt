@@ -46,6 +46,15 @@ fun AppNavigation(
     marketingViewModel: MarketingViewModel = androidx.hilt.navigation.compose.hiltViewModel(),
     settingsViewModel: SettingsViewModel = androidx.hilt.navigation.compose.hiltViewModel()
 ) {
+    var showSplash by remember { mutableStateOf(true) }
+
+    if (showSplash) {
+        com.teabiz.crm.ui.screens.splash.SplashScreen {
+            showSplash = false
+        }
+        return
+    }
+
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
