@@ -1,9 +1,9 @@
 package com.teabiz.crm.ui.screens.splash
 
 import androidx.compose.animation.core.*
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -166,12 +166,12 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
         // Brand text at bottom
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .offset(y = textOffset.dp)
                 .padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
         ) {
-            Spacer(modifier = Modifier.height(size.height * 0.76f))
 
             Text(
                 text = "Arihant's Natural",
@@ -198,6 +198,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
                 color = Color(0xFFA0A0A0).copy(alpha = textAlpha),
                 letterSpacing = 2.sp
             )
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }
