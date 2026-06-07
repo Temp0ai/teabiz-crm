@@ -4,41 +4,34 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Green background circle -->
+    <!-- Cream background -->
     <path
-        android:fillColor="#2E7D32"
-        android:pathData="M54,54m-40,0a40,40 0,1 1,80 0a40,40 0,1 1,-80 0" />
-    <!-- White cup body -->
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M36,38h36c1.1,0 2,0.9 2,2v18c0,4.4 -3.6,8 -8,8h-24c-4.4,0 -8,-3.6 -8,-8v-18c0,-1.1 0.9,-2 2,-2z" />
-    <!-- Cup handle -->
+        android:fillColor="#F5F0E8"
+        android:pathData="M0,0h108v108H0z" />
+    <!-- White circle -->
     <path
         android:fillColor="#FFFFFF"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="3"
-        android:pathData="M72,44c3.3,0 6,2.7 6,6v6c0,3.3 -2.7,6 -6,6" />
-    <!-- Steam lines -->
+        android:pathData="M54,54m-30,0a30,30 0,1 1,60 0a30,30 0,1 1,-60 0" />
+    <!-- Green leaf -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M54,28 C60,22 68,26 65,34 C62,40 56,40 54,36 C52,40 46,40 43,34 C40,26 48,22 54,28Z" />
+    <!-- Leaf vein -->
     <path
         android:fillColor="#00000000"
         android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
-        android:pathData="M44,34c0,-4 4,-4 4,-8" />
+        android:strokeWidth="1.5"
+        android:pathData="M54,30 L54,38" />
+    <!-- ARIHANT'S text -->
     <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
-        android:pathData="M52,32c0,-4 4,-4 4,-8" />
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFF"
-        android:strokeWidth="2.5"
-        android:pathData="M60,34c0,-4 4,-4 4,-8" />
-    <!-- TB text -->
+        android:fillColor="#C62828"
+        android:pathData="M36,62l3,-10l2,0l7,10l2,0l7,-10l2,0l3,10l-3,0l-1.5,-5l-7,0l-1.5,5z M43.5,59l5,0l-2.5,-7z" />
+    <!-- Natural text -->
     <path
         android:fillColor="#2E7D32"
-        android:pathData="M40,68l8,-4l-3,-5l-5,3z" />
+        android:pathData="M38,72l2,-10l4,7l4,-7l2,0l2,10l-2,0l-0.3,-1.5l-5.4,8l-0.3,0l-5.4,-8l-0.3,1.5z M44.2,68l3.6,0l-1.8,-5.5z" />
+    <!-- Instant Premix text line -->
     <path
-        android:fillColor="#2E7D32"
-        android:pathData="M44,68l6,-3l3,5l-6,3z" />
+        android:fillColor="#999999"
+        android:pathData="M40,78l20,0l0,1l-20,0z" />
 </vector>
